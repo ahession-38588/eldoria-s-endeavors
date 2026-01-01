@@ -1,10 +1,11 @@
-import { Task, TodoList, StoryContent } from './types';
+import { Task, TodoList, CompanionStory } from './types';
 
 const STORAGE_KEY = 'fantasy-todo-data';
 
 export interface AppData {
   lists: TodoList[];
   focusedTaskIds: string[];
+  companionStory: CompanionStory | null;
 }
 
 export const generateId = (): string => {
@@ -15,7 +16,22 @@ export const getStoredData = (): AppData => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const data = JSON.parse(stored);
+      // Migration: remove old task-based story fields and ensure companionStory exists
+      if (data.lists) {
+        data.lists = data.lists.map((list: TodoList) => ({
+          ...list,
+          tasks: list.tasks.map((task: Task & { story?: unknown; storyRevealedLines?: unknown }) => {
+            const { story, storyRevealedLines, ...cleanTask } = task as Task & { story?: unknown; storyRevealedLines?: unknown };
+            return cleanTask;
+          }),
+        }));
+      }
+      return {
+        lists: data.lists || [],
+        focusedTaskIds: data.focusedTaskIds || [],
+        companionStory: data.companionStory || null,
+      };
     }
   } catch (error) {
     console.error('Error reading from localStorage:', error);
@@ -23,6 +39,7 @@ export const getStoredData = (): AppData => {
   return {
     lists: [],
     focusedTaskIds: [],
+    companionStory: null,
   };
 };
 
@@ -39,8 +56,6 @@ export const createTask = (text: string): Task => ({
   text,
   completed: false,
   createdAt: Date.now(),
-  story: null,
-  storyRevealedLines: 0,
 });
 
 export const createList = (name: string): TodoList => ({
@@ -51,8 +66,9 @@ export const createList = (name: string): TodoList => ({
   createdAt: Date.now(),
 });
 
-export const createStory = (content: string, imageUrl?: string): StoryContent => ({
+export const createCompanionStory = (content: string, imageUrl?: string): CompanionStory => ({
   content,
   imageUrl,
   totalLines: content.split('\n').filter(line => line.trim()).length,
+  revealedLines: 0,
 });
