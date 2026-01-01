@@ -9,8 +9,6 @@ export interface Task {
   text: string;
   completed: boolean;
   createdAt: number;
-  story: StoryContent | null;
-  storyRevealedLines: number;
 }
 
 export interface TodoList {
@@ -19,4 +17,11 @@ export interface TodoList {
   tasks: Task[];
   isCollapsed: boolean;
   createdAt: number;
+}
+
+export interface CompanionStory {
+  content: string;
+  imageUrl?: string;
+  totalLines: number;
+  revealedLines: number;
 }

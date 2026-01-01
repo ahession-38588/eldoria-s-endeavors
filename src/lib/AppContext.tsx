@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Task, TodoList } from './types';
+import { Task, TodoList, CompanionStory } from './types';
 import { 
   getStoredData, 
   saveData, 
   createTask, 
-  createList, 
-  generateId,
+  createList,
+  createCompanionStory,
   AppData 
 } from './storage';
 
@@ -21,18 +21,22 @@ type Action =
   | { type: 'DELETE_TASK'; payload: { listId: string; taskId: string } }
   | { type: 'TOGGLE_TASK'; payload: { listId: string; taskId: string } }
   | { type: 'UPDATE_TASK_TEXT'; payload: { listId: string; taskId: string; text: string } }
-  | { type: 'ADD_STORY_TO_TASK'; payload: { listId: string; taskId: string; content: string; imageUrl?: string } }
-  | { type: 'REVEAL_STORY_LINES'; payload: { listId: string; taskId: string; lines: number } }
   | { type: 'MOVE_TO_FOCUS'; payload: { taskId: string } }
   | { type: 'REMOVE_FROM_FOCUS'; payload: { taskId: string } }
   | { type: 'COMPLETE_FOCUSED_TASK'; payload: { taskId: string } }
   | { type: 'REORDER_TASK'; payload: { listId: string; oldIndex: number; newIndex: number } }
-  | { type: 'MOVE_TASK_BETWEEN_LISTS'; payload: { fromListId: string; toListId: string; taskId: string; newIndex: number } };
+  | { type: 'MOVE_TASK_BETWEEN_LISTS'; payload: { fromListId: string; toListId: string; taskId: string; newIndex: number } }
+  | { type: 'SET_COMPANION_STORY'; payload: { content: string; imageUrl?: string } }
+  | { type: 'CLEAR_COMPANION_STORY' }
+  | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } };
 
 const initialState: AppState = {
   lists: [],
   focusedTaskIds: [],
+  companionStory: null,
 };
+
+const LINES_PER_TASK = 3;
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -96,24 +100,15 @@ function reducer(state: AppState, action: Action): AppState {
       };
 
     case 'TOGGLE_TASK': {
-      let revealLines = 0;
+      let wasCompleting = false;
       const updatedLists = state.lists.map(list => {
         if (list.id === action.payload.listId) {
           return {
             ...list,
             tasks: list.tasks.map(task => {
               if (task.id === action.payload.taskId) {
-                const willComplete = !task.completed;
-                if (willComplete && task.story) {
-                  revealLines = Math.min(3, task.story.totalLines - task.storyRevealedLines);
-                }
-                return {
-                  ...task,
-                  completed: willComplete,
-                  storyRevealedLines: willComplete && task.story
-                    ? Math.min(task.storyRevealedLines + 3, task.story.totalLines)
-                    : task.storyRevealedLines,
-                };
+                wasCompleting = !task.completed;
+                return { ...task, completed: !task.completed };
               }
               return task;
             }),
@@ -121,7 +116,17 @@ function reducer(state: AppState, action: Action): AppState {
         }
         return list;
       });
-      return { ...state, lists: updatedLists };
+
+      // Reveal story lines when completing a task
+      let updatedStory = state.companionStory;
+      if (wasCompleting && updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
+        updatedStory = {
+          ...updatedStory,
+          revealedLines: Math.min(updatedStory.revealedLines + LINES_PER_TASK, updatedStory.totalLines),
+        };
+      }
+
+      return { ...state, lists: updatedLists, companionStory: updatedStory };
     }
 
     case 'UPDATE_TASK_TEXT':
@@ -134,53 +139,6 @@ function reducer(state: AppState, action: Action): AppState {
                 tasks: list.tasks.map(task =>
                   task.id === action.payload.taskId
                     ? { ...task, text: action.payload.text }
-                    : task
-                ),
-              }
-            : list
-        ),
-      };
-
-    case 'ADD_STORY_TO_TASK':
-      return {
-        ...state,
-        lists: state.lists.map(list =>
-          list.id === action.payload.listId
-            ? {
-                ...list,
-                tasks: list.tasks.map(task =>
-                  task.id === action.payload.taskId
-                    ? {
-                        ...task,
-                        story: {
-                          content: action.payload.content,
-                          imageUrl: action.payload.imageUrl,
-                          totalLines: action.payload.content.split('\n').filter(line => line.trim()).length,
-                        },
-                      }
-                    : task
-                ),
-              }
-            : list
-        ),
-      };
-
-    case 'REVEAL_STORY_LINES':
-      return {
-        ...state,
-        lists: state.lists.map(list =>
-          list.id === action.payload.listId
-            ? {
-                ...list,
-                tasks: list.tasks.map(task =>
-                  task.id === action.payload.taskId && task.story
-                    ? {
-                        ...task,
-                        storyRevealedLines: Math.min(
-                          task.storyRevealedLines + action.payload.lines,
-                          task.story.totalLines
-                        ),
-                      }
                     : task
                 ),
               }
@@ -222,13 +180,7 @@ function reducer(state: AppState, action: Action): AppState {
             ...list,
             tasks: list.tasks.map(task => {
               if (task.id === taskId) {
-                return {
-                  ...task,
-                  completed: true,
-                  storyRevealedLines: task.story
-                    ? Math.min(task.storyRevealedLines + 3, task.story.totalLines)
-                    : 0,
-                };
+                return { ...task, completed: true };
               }
               return task;
             }),
@@ -236,10 +188,20 @@ function reducer(state: AppState, action: Action): AppState {
         }
         return list;
       });
+
+      // Reveal story lines when completing a focused task
+      let updatedStory = state.companionStory;
+      if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
+        updatedStory = {
+          ...updatedStory,
+          revealedLines: Math.min(updatedStory.revealedLines + LINES_PER_TASK, updatedStory.totalLines),
+        };
+      }
       
       return {
         ...state,
         lists: updatedLists,
+        companionStory: updatedStory,
         focusedTaskIds: state.focusedTaskIds.filter(id => id !== taskId),
       };
     }
@@ -289,6 +251,31 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, lists: finalLists };
     }
 
+    case 'SET_COMPANION_STORY':
+      return {
+        ...state,
+        companionStory: createCompanionStory(action.payload.content, action.payload.imageUrl),
+      };
+
+    case 'CLEAR_COMPANION_STORY':
+      return {
+        ...state,
+        companionStory: null,
+      };
+
+    case 'REVEAL_COMPANION_STORY_LINES':
+      if (!state.companionStory) return state;
+      return {
+        ...state,
+        companionStory: {
+          ...state.companionStory,
+          revealedLines: Math.min(
+            state.companionStory.revealedLines + action.payload.lines,
+            state.companionStory.totalLines
+          ),
+        },
+      };
+
     default:
       return state;
   }
@@ -312,7 +299,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (state.lists.length > 0 || state.focusedTaskIds.length > 0) {
+    if (state.lists.length > 0 || state.focusedTaskIds.length > 0 || state.companionStory) {
       saveData(state);
     }
   }, [state]);
