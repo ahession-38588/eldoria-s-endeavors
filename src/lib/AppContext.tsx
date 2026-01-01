@@ -25,7 +25,9 @@ type Action =
   | { type: 'REVEAL_STORY_LINES'; payload: { listId: string; taskId: string; lines: number } }
   | { type: 'MOVE_TO_FOCUS'; payload: { taskId: string } }
   | { type: 'REMOVE_FROM_FOCUS'; payload: { taskId: string } }
-  | { type: 'COMPLETE_FOCUSED_TASK'; payload: { taskId: string } };
+  | { type: 'COMPLETE_FOCUSED_TASK'; payload: { taskId: string } }
+  | { type: 'REORDER_TASK'; payload: { listId: string; oldIndex: number; newIndex: number } }
+  | { type: 'MOVE_TASK_BETWEEN_LISTS'; payload: { fromListId: string; toListId: string; taskId: string; newIndex: number } };
 
 const initialState: AppState = {
   lists: [],
@@ -240,6 +242,51 @@ function reducer(state: AppState, action: Action): AppState {
         lists: updatedLists,
         focusedTaskIds: state.focusedTaskIds.filter(id => id !== taskId),
       };
+    }
+
+    case 'REORDER_TASK': {
+      const { listId, oldIndex, newIndex } = action.payload;
+      return {
+        ...state,
+        lists: state.lists.map(list => {
+          if (list.id === listId) {
+            const newTasks = [...list.tasks];
+            const [movedTask] = newTasks.splice(oldIndex, 1);
+            newTasks.splice(newIndex, 0, movedTask);
+            return { ...list, tasks: newTasks };
+          }
+          return list;
+        }),
+      };
+    }
+
+    case 'MOVE_TASK_BETWEEN_LISTS': {
+      const { fromListId, toListId, taskId, newIndex } = action.payload;
+      let movedTask: Task | null = null;
+      
+      const listsWithoutTask = state.lists.map(list => {
+        if (list.id === fromListId) {
+          const taskIndex = list.tasks.findIndex(t => t.id === taskId);
+          if (taskIndex !== -1) {
+            movedTask = list.tasks[taskIndex];
+            return { ...list, tasks: list.tasks.filter(t => t.id !== taskId) };
+          }
+        }
+        return list;
+      });
+      
+      if (!movedTask) return state;
+      
+      const finalLists = listsWithoutTask.map(list => {
+        if (list.id === toListId) {
+          const newTasks = [...list.tasks];
+          newTasks.splice(newIndex, 0, movedTask!);
+          return { ...list, tasks: newTasks };
+        }
+        return list;
+      });
+      
+      return { ...state, lists: finalLists };
     }
 
     default:
