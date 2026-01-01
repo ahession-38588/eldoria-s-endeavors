@@ -1,14 +1,36 @@
+import { useState, useMemo } from 'react';
 import { Plus, ScrollText } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { TodoListCard } from './TodoListCard';
-import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+  DragOverlay,
+} from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
+import { Task } from '@/lib/types';
 
 export function ListsArea() {
   const { state, dispatch } = useApp();
   const [isAdding, setIsAdding] = useState(false);
   const [newListName, setNewListName] = useState('');
+  const [activeTask, setActiveTask] = useState<{ task: Task; listId: string } | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleAddList = () => {
     if (newListName.trim()) {
@@ -24,6 +46,96 @@ export function ListsArea() {
     } else if (e.key === 'Escape') {
       setIsAdding(false);
       setNewListName('');
+    }
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const activeData = active.data.current;
+    
+    if (activeData?.type === 'task') {
+      setActiveTask({
+        task: activeData.task,
+        listId: activeData.listId,
+      });
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    if (!activeData || activeData.type !== 'task') return;
+
+    const activeListId = activeData.listId;
+    let overListId: string | null = null;
+
+    // Determine the target list
+    if (overData?.type === 'list') {
+      overListId = overData.listId;
+    } else if (overData?.type === 'task') {
+      overListId = overData.listId;
+    }
+
+    if (!overListId || activeListId === overListId) return;
+
+    // Find the target list
+    const overList = state.lists.find(l => l.id === overListId);
+    if (!overList) return;
+
+    // Calculate new index
+    let newIndex = overList.tasks.length;
+    if (overData?.type === 'task') {
+      const overTaskIndex = overList.tasks.findIndex(t => t.id === over.id);
+      if (overTaskIndex !== -1) {
+        newIndex = overTaskIndex;
+      }
+    }
+
+    // Move task between lists
+    dispatch({
+      type: 'MOVE_TASK_BETWEEN_LISTS',
+      payload: {
+        fromListId: activeListId,
+        toListId: overListId,
+        taskId: active.id as string,
+        newIndex,
+      },
+    });
+
+    // Update active task's listId
+    setActiveTask(prev => prev ? { ...prev, listId: overListId! } : null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over) return;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    if (!activeData || activeData.type !== 'task') return;
+
+    // Same list reordering
+    if (overData?.type === 'task' && activeData.listId === overData.listId) {
+      const listId = activeData.listId;
+      const list = state.lists.find(l => l.id === listId);
+      if (!list) return;
+
+      const oldIndex = list.tasks.findIndex(t => t.id === active.id);
+      const newIndex = list.tasks.findIndex(t => t.id === over.id);
+
+      if (oldIndex !== newIndex && oldIndex !== -1 && newIndex !== -1) {
+        dispatch({
+          type: 'REORDER_TASK',
+          payload: { listId, oldIndex, newIndex },
+        });
+      }
     }
   };
 
@@ -100,11 +212,27 @@ export function ListsArea() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {state.lists.map((list) => (
-              <TodoListCard key={list.id} list={list} />
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {state.lists.map((list) => (
+                <TodoListCard key={list.id} list={list} />
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activeTask && (
+                <div className="p-2 rounded-md bg-card border border-primary/50 shadow-glow text-sm text-foreground">
+                  {activeTask.task.text}
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
     </div>

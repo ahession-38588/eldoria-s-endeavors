@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Check, Target, BookOpen, Trash2, Edit2, Sparkles } from 'lucide-react';
+import { Check, Target, BookOpen, Trash2, Edit2, Sparkles, GripVertical } from 'lucide-react';
 import { Task } from '@/lib/types';
 import { useApp } from '@/lib/AppContext';
 import { cn } from '@/lib/utils';
 import { StoryEditor } from './StoryEditor';
 import { StoryReveal } from './StoryReveal';
 import { Input } from '@/components/ui/input';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TaskItemProps {
   task: Task;
@@ -19,6 +21,27 @@ export function TaskItem({ task, listId }: TaskItemProps) {
   const [showStoryEditor, setShowStoryEditor] = useState(false);
   const [showStoryReveal, setShowStoryReveal] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: {
+      type: 'task',
+      task,
+      listId,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const hasUnrevealedStory = task.story && task.storyRevealedLines < task.story.totalLines;
   const hasRevealedStory = task.story && task.storyRevealedLines > 0;
@@ -58,14 +81,26 @@ export function TaskItem({ task, listId }: TaskItemProps) {
   return (
     <>
       <div
+        ref={setNodeRef}
+        style={style}
         className={cn(
           "group relative flex items-center gap-2 p-2 rounded-md transition-all duration-300",
           "hover:bg-muted/30",
           task.completed && "opacity-60",
           justCompleted && "task-complete-glow",
-          hasUnrevealedStory && !task.completed && "ring-1 ring-glow-gold/20"
+          hasUnrevealedStory && !task.completed && "ring-1 ring-glow-gold/20",
+          isDragging && "opacity-50 shadow-glow z-50 bg-card"
         )}
       >
+        {/* Drag handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="flex-shrink-0 p-0.5 rounded text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+        >
+          <GripVertical className="w-3.5 h-3.5" />
+        </button>
+
         {/* Checkbox */}
         <button
           onClick={handleToggle}

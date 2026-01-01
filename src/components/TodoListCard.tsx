@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 interface TodoListCardProps {
   list: TodoList;
@@ -23,6 +25,14 @@ export function TodoListCard({ list }: TodoListCardProps) {
   const [newTaskText, setNewTaskText] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(list.name);
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `list-${list.id}`,
+    data: {
+      type: 'list',
+      listId: list.id,
+    },
+  });
 
   const handleToggleCollapse = () => {
     dispatch({ type: 'TOGGLE_LIST_COLLAPSE', payload: { listId: list.id } });
@@ -58,14 +68,17 @@ export function TodoListCard({ list }: TodoListCardProps) {
 
   const completedCount = list.tasks.filter(t => t.completed).length;
   const totalCount = list.tasks.length;
+  const taskIds = list.tasks.map(t => t.id);
 
   return (
     <div
+      ref={setNodeRef}
       className={cn(
         "rounded-lg border transition-all duration-300",
         "bg-card/50 border-border/50",
         "hover:border-ethereal/30 hover:shadow-glow",
-        list.isCollapsed && "opacity-80"
+        list.isCollapsed && "opacity-80",
+        isOver && "border-primary/50 shadow-glow bg-primary/5"
       )}
     >
       {/* Header */}
@@ -130,10 +143,18 @@ export function TodoListCard({ list }: TodoListCardProps) {
 
       {/* Content */}
       {!list.isCollapsed && (
-        <div className="p-3 space-y-2 animate-accordion-down">
-          {list.tasks.map((task) => (
-            <TaskItem key={task.id} task={task} listId={list.id} />
-          ))}
+        <div className="p-3 space-y-2 animate-accordion-down min-h-[60px]">
+          <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+            {list.tasks.map((task) => (
+              <TaskItem key={task.id} task={task} listId={list.id} />
+            ))}
+          </SortableContext>
+
+          {list.tasks.length === 0 && (
+            <div className="text-center py-4 text-muted-foreground/50 text-xs">
+              Drop tasks here
+            </div>
+          )}
 
           {isAddingTask ? (
             <div className="flex gap-2 animate-fade-in">
