@@ -27,10 +27,16 @@ export const getStoredData = (): AppData => {
           }),
         }));
       }
+      // Migration: ensure companionStory has lastReadLine
+      let companionStory = data.companionStory || null;
+      if (companionStory && companionStory.lastReadLine === undefined) {
+        companionStory = { ...companionStory, lastReadLine: 0 };
+      }
+      
       return {
         lists: data.lists || [],
         focusedTaskIds: data.focusedTaskIds || [],
-        companionStory: data.companionStory || null,
+        companionStory,
       };
     }
   } catch (error) {
