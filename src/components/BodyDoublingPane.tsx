@@ -1,16 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Heart, Sparkles, Edit2, Trash2, BookOpen, ArrowLeft } from 'lucide-react';
+import { Heart, Sparkles, Edit2, Trash2, BookOpen, ArrowLeft, Users } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { cn } from '@/lib/utils';
 import { LofiCompanion, CompanionMood } from './LofiCompanion';
 import { StoryEditor } from './StoryEditor';
+import { CompanionPicker } from './CompanionPicker';
 import { Button } from '@/components/ui/button';
+import { CompanionType } from '@/lib/types';
 
 type ViewMode = 'animation' | 'story';
 
 export function BodyDoublingPane() {
   const { state, dispatch } = useApp();
   const [showStoryEditor, setShowStoryEditor] = useState(false);
+  const [showCompanionPicker, setShowCompanionPicker] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('animation');
   const [recentlyCompleted, setRecentlyCompleted] = useState(false);
 
@@ -104,6 +107,13 @@ export function BodyDoublingPane() {
         <h2 className="font-display text-xl text-foreground glow-text">Companion</h2>
         
         <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={() => setShowCompanionPicker(true)}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/20 transition-all"
+            title="Change companion"
+          >
+            <Users className="w-4 h-4" />
+          </button>
           {hasStory && viewMode === 'animation' && hasRevealedContent && (
             <button
               onClick={() => setViewMode('story')}
@@ -146,7 +156,7 @@ export function BodyDoublingPane() {
         {viewMode === 'animation' ? (
           // Animation View
           <div className="flex-1 flex flex-col items-center justify-center">
-            <LofiCompanion mood={mood} progress={progress} />
+            <LofiCompanion mood={mood} progress={progress} companionType={state.selectedCompanion} />
             
             {!hasStory ? (
               <div className="mt-6 text-center px-4">
@@ -262,6 +272,15 @@ export function BodyDoublingPane() {
           initialImageUrl={story?.imageUrl}
           onSave={handleSaveStory}
           onClose={() => setShowStoryEditor(false)}
+        />
+      )}
+
+      {/* Companion Picker Modal */}
+      {showCompanionPicker && (
+        <CompanionPicker
+          selected={state.selectedCompanion}
+          onSelect={(type) => dispatch({ type: 'SET_COMPANION_TYPE', payload: { companionType: type } })}
+          onClose={() => setShowCompanionPicker(false)}
         />
       )}
     </div>

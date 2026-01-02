@@ -1,3 +1,5 @@
+export type CompanionType = 'scholar' | 'cat' | 'robot' | 'spirit';
+
 export interface StoryContent {
   content: string;
   imageUrl?: string;

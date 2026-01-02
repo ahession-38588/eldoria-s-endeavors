@@ -1,157 +1,49 @@
 import { cn } from '@/lib/utils';
+import { CompanionType } from '@/lib/types';
+import { ScholarCompanion } from './companions/ScholarCompanion';
+import { CatCompanion } from './companions/CatCompanion';
+import { RobotCompanion } from './companions/RobotCompanion';
+import { SpiritCompanion } from './companions/SpiritCompanion';
 
 export type CompanionMood = 'idle' | 'working' | 'excited' | 'celebrating' | 'sleepy';
 
 interface LofiCompanionProps {
   mood?: CompanionMood;
-  progress?: number; // 0-100
+  progress?: number;
+  companionType?: CompanionType;
 }
 
-export function LofiCompanion({ mood = 'working', progress = 0 }: LofiCompanionProps) {
-  const isTyping = mood === 'working';
+export function LofiCompanion({ mood = 'working', progress = 0, companionType = 'scholar' }: LofiCompanionProps) {
   const isCelebrating = mood === 'celebrating';
-  const isExcited = mood === 'excited';
-  const isSleepy = mood === 'sleepy';
 
   // Dynamic glow based on progress
   const glowIntensity = Math.min(0.3 + (progress / 100) * 0.4, 0.7);
 
+  const renderCompanion = () => {
+    switch (companionType) {
+      case 'cat':
+        return <CatCompanion mood={mood} />;
+      case 'robot':
+        return <RobotCompanion mood={mood} />;
+      case 'spirit':
+        return <SpiritCompanion mood={mood} />;
+      case 'scholar':
+      default:
+        return <ScholarCompanion mood={mood} />;
+    }
+  };
+
   return (
     <div className="relative flex items-center justify-center w-full h-full min-h-[180px]">
-      {/* Lofi character - pixel art style */}
       <div className={cn(
-        "lofi-scene",
+        "lofi-scene w-40 h-40",
         isCelebrating && "celebrating",
-        isExcited && "excited",
-        isSleepy && "sleepy"
+        mood === 'excited' && "excited",
+        mood === 'sleepy' && "sleepy"
       )}>
-        <svg
-          width="160"
-          height="160"
-          viewBox="0 0 24 24"
-          className="pixel-art"
-          style={{ imageRendering: 'pixelated' }}
-        >
-          {/* Desk */}
-          <rect x="2" y="18" width="20" height="2" className="fill-muted" />
-          <rect x="3" y="20" width="2" height="3" className="fill-muted-foreground/50" />
-          <rect x="19" y="20" width="2" height="3" className="fill-muted-foreground/50" />
-          
-          {/* Laptop base */}
-          <rect x="7" y="16" width="10" height="2" className="fill-primary/80" />
-          
-          {/* Laptop screen - different colors based on mood */}
-          <rect x="8" y="12" width="8" height="4" className="fill-primary" />
-          <rect 
-            x="9" y="13" width="6" height="2" 
-            className={cn(
-              "animate-screen-glow",
-              isCelebrating ? "fill-glow-gold/80" : 
-              isExcited ? "fill-accent/80" : 
-              "fill-accent/60"
-            )} 
-          />
-          
-          {/* Celebration sparkles */}
-          {isCelebrating && (
-            <>
-              <rect x="5" y="3" width="1" height="1" className="fill-glow-gold sparkle-1" />
-              <rect x="18" y="4" width="1" height="1" className="fill-glow-gold sparkle-2" />
-              <rect x="7" y="6" width="1" height="1" className="fill-starlight sparkle-3" />
-              <rect x="16" y="2" width="1" height="1" className="fill-starlight sparkle-4" />
-              <rect x="3" y="8" width="1" height="1" className="fill-accent sparkle-5" />
-              <rect x="20" y="7" width="1" height="1" className="fill-accent sparkle-6" />
-            </>
-          )}
-          
-          {/* Character body */}
-          <rect x="11" y="10" width="3" height="6" className="fill-secondary" />
-          
-          {/* Character head */}
-          <rect 
-            x="10" y="5" width="5" height="5" 
-            className={cn(
-              "fill-[hsl(var(--starlight))]",
-              isCelebrating && "head-bounce"
-            )} 
-          />
-          
-          {/* Hair */}
-          <rect x="9" y="4" width="7" height="2" className="fill-primary" />
-          <rect x="9" y="5" width="1" height="4" className="fill-primary" />
-          <rect x="15" y="5" width="1" height="3" className="fill-primary" />
-          
-          {/* Eyes - different states */}
-          {isSleepy ? (
-            // Sleepy eyes (closed lines)
-            <>
-              <rect x="11" y="7" width="1" height="1" className="fill-accent/60" />
-              <rect x="13" y="7" width="1" height="1" className="fill-accent/60" />
-            </>
-          ) : isCelebrating || isExcited ? (
-            // Happy eyes (^ ^)
-            <>
-              <rect x="11" y="7" width="1" height="1" className="fill-accent" />
-              <rect x="11" y="6" width="1" height="1" className="fill-accent/50" />
-              <rect x="13" y="7" width="1" height="1" className="fill-accent" />
-              <rect x="13" y="6" width="1" height="1" className="fill-accent/50" />
-            </>
-          ) : (
-            // Normal blinking eyes
-            <>
-              <rect x="11" y="7" width="1" height="1" className="fill-accent character-blink" />
-              <rect x="13" y="7" width="1" height="1" className="fill-accent character-blink" />
-            </>
-          )}
-          
-          {/* Blush when celebrating */}
-          {(isCelebrating || isExcited) && (
-            <>
-              <rect x="10" y="8" width="1" height="1" className="fill-glow-gold/40" />
-              <rect x="14" y="8" width="1" height="1" className="fill-glow-gold/40" />
-            </>
-          )}
-          
-          {/* Arms on desk - typing animation or raised for celebration */}
-          {isCelebrating ? (
-            // Arms raised in celebration
-            <>
-              <rect x="8" y="10" width="2" height="2" className="fill-[hsl(var(--starlight))] arm-wave-left" />
-              <rect x="15" y="10" width="2" height="2" className="fill-[hsl(var(--starlight))] arm-wave-right" />
-            </>
-          ) : (
-            // Normal typing arms
-            <>
-              <rect x="9" y="14" width="2" height="2" className={cn("fill-[hsl(var(--starlight))]", isTyping && "animate-typing-left")} />
-              <rect x="14" y="14" width="2" height="2" className={cn("fill-[hsl(var(--starlight))]", isTyping && "animate-typing-right")} />
-            </>
-          )}
-          
-          {/* Drink/mug */}
-          <rect x="18" y="15" width="2" height="3" className="fill-glow-gold/70" />
-          <rect x="20" y="16" width="1" height="1" className="fill-glow-gold/50" />
-          
-          {/* Steam from drink - more active when working */}
-          <rect x="18" y="13" width="1" height="1" className={cn("fill-muted-foreground/30", isTyping ? "animate-steam-1" : "opacity-20")} />
-          <rect x="19" y="12" width="1" height="1" className={cn("fill-muted-foreground/20", isTyping ? "animate-steam-2" : "opacity-10")} />
-          
-          {/* Plant */}
-          <rect x="3" y="15" width="2" height="3" className="fill-glow-gold/40" />
-          <rect x="3" y="13" width="2" height="2" className="fill-green-600/80" />
-          <rect x="2" y="12" width="1" height="2" className="fill-green-600/60" />
-          <rect x="5" y="12" width="1" height="2" className="fill-green-600/60" />
-          
-          {/* ZZZ for sleepy */}
-          {isSleepy && (
-            <>
-              <text x="16" y="5" className="fill-muted-foreground/50 text-[3px] font-bold zzz-1">z</text>
-              <text x="18" y="4" className="fill-muted-foreground/40 text-[2px] font-bold zzz-2">z</text>
-              <text x="19" y="2" className="fill-muted-foreground/30 text-[2px] font-bold zzz-3">z</text>
-            </>
-          )}
-        </svg>
+        {renderCompanion()}
         
-        {/* Ambient particles - more when celebrating */}
+        {/* Ambient particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className={cn("ambient-particle particle-a", isCelebrating && "celebrating-particle")} />
           <div className={cn("ambient-particle particle-b", isCelebrating && "celebrating-particle")} />
@@ -221,13 +113,11 @@ export function LofiCompanion({ mood = 'working', progress = 0 }: LofiCompanionP
         @keyframes typing-left {
           0%, 100% { transform: translateY(0); }
           25% { transform: translateY(-1px); }
-          50% { transform: translateY(0); }
         }
         
         @keyframes typing-right {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-1px); }
-          75% { transform: translateY(0); }
         }
         
         .animate-typing-left {
@@ -238,28 +128,17 @@ export function LofiCompanion({ mood = 'working', progress = 0 }: LofiCompanionP
           animation: typing-right 0.4s ease-in-out infinite 0.1s;
         }
         
-        @keyframes arm-wave {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-2px) rotate(-10deg); }
-        }
-        
-        .arm-wave-left {
+        .arm-wave-left, .arm-wave-right {
           animation: arm-wave 0.4s ease-in-out infinite;
-          transform-origin: bottom right;
         }
         
         .arm-wave-right {
-          animation: arm-wave 0.4s ease-in-out infinite 0.2s;
-          transform-origin: bottom left;
+          animation-delay: 0.2s;
         }
         
-        .head-bounce {
-          animation: head-bounce 0.5s ease-in-out infinite;
-        }
-        
-        @keyframes head-bounce {
+        @keyframes arm-wave {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-1px); }
+          50% { transform: translateY(-2px); }
         }
         
         @keyframes blink {
@@ -302,8 +181,6 @@ export function LofiCompanion({ mood = 'working', progress = 0 }: LofiCompanionP
         .sparkle-2 { animation: sparkle 1s ease-in-out infinite 0.15s; }
         .sparkle-3 { animation: sparkle 1s ease-in-out infinite 0.3s; }
         .sparkle-4 { animation: sparkle 1s ease-in-out infinite 0.45s; }
-        .sparkle-5 { animation: sparkle 1s ease-in-out infinite 0.6s; }
-        .sparkle-6 { animation: sparkle 1s ease-in-out infinite 0.75s; }
         
         @keyframes zzz {
           0%, 100% { opacity: 0.3; transform: translateY(0); }
@@ -312,7 +189,6 @@ export function LofiCompanion({ mood = 'working', progress = 0 }: LofiCompanionP
         
         .zzz-1 { animation: zzz 2s ease-in-out infinite; }
         .zzz-2 { animation: zzz 2s ease-in-out infinite 0.3s; }
-        .zzz-3 { animation: zzz 2s ease-in-out infinite 0.6s; }
         
         .ambient-particle {
           position: absolute;
