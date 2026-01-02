@@ -71,4 +71,5 @@ export const createCompanionStory = (content: string, imageUrl?: string): Compan
   imageUrl,
   totalLines: content.split('\n').filter(line => line.trim()).length,
   revealedLines: 0,
+  lastReadLine: 0,
 });

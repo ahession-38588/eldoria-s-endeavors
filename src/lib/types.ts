@@ -24,4 +24,5 @@ export interface CompanionStory {
   imageUrl?: string;
   totalLines: number;
   revealedLines: number;
+  lastReadLine: number; // Track which lines user has read
 }

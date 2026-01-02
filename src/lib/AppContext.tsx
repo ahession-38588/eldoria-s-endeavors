@@ -28,7 +28,8 @@ type Action =
   | { type: 'MOVE_TASK_BETWEEN_LISTS'; payload: { fromListId: string; toListId: string; taskId: string; newIndex: number } }
   | { type: 'SET_COMPANION_STORY'; payload: { content: string; imageUrl?: string } }
   | { type: 'CLEAR_COMPANION_STORY' }
-  | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } };
+  | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } }
+  | { type: 'MARK_STORY_READ' };
 
 const initialState: AppState = {
   lists: [],
@@ -273,6 +274,16 @@ function reducer(state: AppState, action: Action): AppState {
             state.companionStory.revealedLines + action.payload.lines,
             state.companionStory.totalLines
           ),
+        },
+      };
+
+    case 'MARK_STORY_READ':
+      if (!state.companionStory) return state;
+      return {
+        ...state,
+        companionStory: {
+          ...state.companionStory,
+          lastReadLine: state.companionStory.revealedLines,
         },
       };
 
