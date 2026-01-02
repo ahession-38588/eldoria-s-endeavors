@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Task, TodoList, CompanionStory } from './types';
+import { Task, TodoList, CompanionStory, CompanionType } from './types';
 import { 
   getStoredData, 
   saveData, 
@@ -29,12 +29,14 @@ type Action =
   | { type: 'SET_COMPANION_STORY'; payload: { content: string; imageUrl?: string } }
   | { type: 'CLEAR_COMPANION_STORY' }
   | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } }
-  | { type: 'MARK_STORY_READ' };
+  | { type: 'MARK_STORY_READ' }
+  | { type: 'SET_COMPANION_TYPE'; payload: { companionType: CompanionType } };
 
 const initialState: AppState = {
   lists: [],
   focusedTaskIds: [],
   companionStory: null,
+  selectedCompanion: 'scholar',
 };
 
 const LINES_PER_TASK = 3;
@@ -285,6 +287,12 @@ function reducer(state: AppState, action: Action): AppState {
           ...state.companionStory,
           lastReadLine: state.companionStory.revealedLines,
         },
+      };
+
+    case 'SET_COMPANION_TYPE':
+      return {
+        ...state,
+        selectedCompanion: action.payload.companionType,
       };
 
     default:

@@ -1,4 +1,4 @@
-import { Task, TodoList, CompanionStory } from './types';
+import { Task, TodoList, CompanionStory, CompanionType } from './types';
 
 const STORAGE_KEY = 'fantasy-todo-data';
 
@@ -6,6 +6,7 @@ export interface AppData {
   lists: TodoList[];
   focusedTaskIds: string[];
   companionStory: CompanionStory | null;
+  selectedCompanion: CompanionType;
 }
 
 export const generateId = (): string => {
@@ -37,6 +38,7 @@ export const getStoredData = (): AppData => {
         lists: data.lists || [],
         focusedTaskIds: data.focusedTaskIds || [],
         companionStory,
+        selectedCompanion: data.selectedCompanion || 'scholar',
       };
     }
   } catch (error) {
@@ -46,6 +48,7 @@ export const getStoredData = (): AppData => {
     lists: [],
     focusedTaskIds: [],
     companionStory: null,
+    selectedCompanion: 'scholar',
   };
 };
 
