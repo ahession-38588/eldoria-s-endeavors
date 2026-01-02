@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Heart, Sparkles, Edit2, Trash2, BookOpen, ArrowLeft } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { cn } from '@/lib/utils';
-import { LofiCompanion } from './LofiCompanion';
+import { LofiCompanion, CompanionMood } from './LofiCompanion';
 import { StoryEditor } from './StoryEditor';
 import { Button } from '@/components/ui/button';
 
@@ -12,11 +12,57 @@ export function BodyDoublingPane() {
   const { state, dispatch } = useApp();
   const [showStoryEditor, setShowStoryEditor] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('animation');
+  const [recentlyCompleted, setRecentlyCompleted] = useState(false);
 
   const story = state.companionStory;
   const hasStory = story !== null;
   const hasUnreadContent = story && story.revealedLines > story.lastReadLine;
   const hasRevealedContent = story && story.revealedLines > 0;
+
+  // Calculate progress and mood
+  const { progress, mood } = useMemo(() => {
+    // Count total tasks and completed tasks
+    let totalTasks = 0;
+    let completedTasks = 0;
+    state.lists.forEach(list => {
+      list.tasks.forEach(task => {
+        totalTasks++;
+        if (task.completed) completedTasks++;
+      });
+    });
+
+    const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+    // Determine mood based on state
+    let mood: CompanionMood = 'working';
+    
+    if (recentlyCompleted) {
+      mood = 'celebrating';
+    } else if (progress >= 100 && totalTasks > 0) {
+      mood = 'celebrating';
+    } else if (progress >= 75) {
+      mood = 'excited';
+    } else if (totalTasks === 0) {
+      mood = 'idle';
+    } else {
+      mood = 'working';
+    }
+
+    return { progress, mood, totalTasks, completedTasks };
+  }, [state.lists, recentlyCompleted]);
+
+  // Track when a task is completed to trigger celebration
+  const completedCount = state.lists.reduce((acc, list) => 
+    acc + list.tasks.filter(t => t.completed).length, 0
+  );
+
+  useEffect(() => {
+    if (completedCount > 0) {
+      setRecentlyCompleted(true);
+      const timer = setTimeout(() => setRecentlyCompleted(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [completedCount]);
 
   // Auto-switch to story view when new content is unlocked
   useEffect(() => {
@@ -100,7 +146,7 @@ export function BodyDoublingPane() {
         {viewMode === 'animation' ? (
           // Animation View
           <div className="flex-1 flex flex-col items-center justify-center">
-            <LofiCompanion isWorking={true} />
+            <LofiCompanion mood={mood} progress={progress} />
             
             {!hasStory ? (
               <div className="mt-6 text-center px-4">
