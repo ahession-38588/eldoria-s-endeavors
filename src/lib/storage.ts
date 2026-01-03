@@ -60,11 +60,12 @@ export const saveData = (data: AppData): void => {
   }
 };
 
-export const createTask = (text: string): Task => ({
+export const createTask = (text: string, duration?: number): Task => ({
   id: generateId(),
   text,
   completed: false,
   createdAt: Date.now(),
+  duration,
 });
 
 export const createList = (name: string): TodoList => ({

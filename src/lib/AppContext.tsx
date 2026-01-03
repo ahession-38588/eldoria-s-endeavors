@@ -21,6 +21,7 @@ type Action =
   | { type: 'DELETE_TASK'; payload: { listId: string; taskId: string } }
   | { type: 'TOGGLE_TASK'; payload: { listId: string; taskId: string } }
   | { type: 'UPDATE_TASK_TEXT'; payload: { listId: string; taskId: string; text: string } }
+  | { type: 'UPDATE_TASK_DURATION'; payload: { taskId: string; duration: number | undefined } }
   | { type: 'MOVE_TO_FOCUS'; payload: { taskId: string } }
   | { type: 'REMOVE_FROM_FOCUS'; payload: { taskId: string } }
   | { type: 'COMPLETE_FOCUSED_TASK'; payload: { taskId: string } }
@@ -147,6 +148,19 @@ function reducer(state: AppState, action: Action): AppState {
               }
             : list
         ),
+      };
+
+    case 'UPDATE_TASK_DURATION':
+      return {
+        ...state,
+        lists: state.lists.map(list => ({
+          ...list,
+          tasks: list.tasks.map(task =>
+            task.id === action.payload.taskId
+              ? { ...task, duration: action.payload.duration }
+              : task
+          ),
+        })),
       };
 
     case 'MOVE_TO_FOCUS':
