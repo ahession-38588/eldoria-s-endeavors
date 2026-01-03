@@ -11,6 +11,7 @@ export interface Task {
   text: string;
   completed: boolean;
   createdAt: number;
+  duration?: number; // Duration in minutes
 }
 
 export interface TodoList {
