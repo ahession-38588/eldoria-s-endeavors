@@ -3,6 +3,7 @@ import { BodyDoublingPane } from '@/components/BodyDoublingPane';
 import { ListsArea } from '@/components/ListsArea';
 import { AppProvider } from '@/lib/AppContext';
 import { Sparkles } from 'lucide-react';
+import AdBanner from '@/components/AdBanner';
 
 const Index = () => {
   return (
@@ -30,11 +31,13 @@ const Index = () => {
             </div>
 
             {/* Bottom row - Lists */}
-            <div className="min-h-[400px] lg:min-h-[500px]">
+            <div className="min-h-[400px] lg:min-h-[500px] pb-20">
               <ListsArea />
             </div>
           </div>
         </main>
+        
+        <AdBanner />
       </div>
     </AppProvider>
   );
