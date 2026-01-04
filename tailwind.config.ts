@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Cinzel', 'serif'],
-        body: ['Quicksand', 'sans-serif'],
+        display: ['Fredoka', 'sans-serif'],
+        body: ['Nunito', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
