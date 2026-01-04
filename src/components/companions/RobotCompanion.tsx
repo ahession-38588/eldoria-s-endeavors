@@ -13,111 +13,153 @@ export function RobotCompanion({ mood }: RobotCompanionProps) {
 
   return (
     <svg
-      viewBox="0 0 24 24"
-      className="w-full h-full pixel-art"
-      style={{ imageRendering: 'pixelated' }}
+      viewBox="0 0 100 100"
+      className="w-full h-full"
+      style={{ filter: 'url(#watercolor-robot)' }}
     >
-      {/* Platform/base */}
-      <rect x="6" y="20" width="12" height="2" className="fill-muted" />
+      <defs>
+        <filter id="watercolor-robot" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" />
+          <feGaussianBlur stdDeviation="0.4" />
+        </filter>
+        
+        <linearGradient id="robotBody" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="hsl(200, 35%, 75%)" />
+          <stop offset="100%" stopColor="hsl(200, 40%, 60%)" />
+        </linearGradient>
+        
+        <radialGradient id="robotGlow" cx="50%" cy="30%" r="60%">
+          <stop offset="0%" stopColor="hsl(180, 50%, 80%)" />
+          <stop offset="100%" stopColor="hsl(200, 40%, 65%)" />
+        </radialGradient>
+        
+        <radialGradient id="screenGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="hsl(145, 60%, 75%)" />
+          <stop offset="100%" stopColor="hsl(145, 50%, 55%)" />
+        </radialGradient>
+      </defs>
       
       {/* Celebration sparkles */}
       {isCelebrating && (
-        <>
-          <rect x="4" y="3" width="1" height="1" className="fill-glow-gold sparkle-1" />
-          <rect x="19" y="4" width="1" height="1" className="fill-glow-gold sparkle-2" />
-          <rect x="6" y="6" width="1" height="1" className="fill-accent sparkle-3" />
-          <rect x="17" y="2" width="1" height="1" className="fill-accent sparkle-4" />
-        </>
+        <g className="sparkles">
+          <circle cx="15" cy="18" r="3" fill="hsl(45, 90%, 70%)" className="sparkle-1" opacity="0.8" />
+          <circle cx="85" cy="22" r="2.5" fill="hsl(340, 60%, 80%)" className="sparkle-2" opacity="0.8" />
+          <circle cx="20" cy="50" r="2" fill="hsl(180, 60%, 70%)" className="sparkle-3" opacity="0.7" />
+          <circle cx="80" cy="55" r="2" fill="hsl(145, 50%, 70%)" className="sparkle-4" opacity="0.7" />
+        </g>
       )}
       
-      {/* Robot body */}
-      <rect x="8" y="12" width="8" height="8" className="fill-primary/80" />
-      <rect x="7" y="13" width="1" height="6" className="fill-primary/60" />
-      <rect x="16" y="13" width="1" height="6" className="fill-primary/60" />
+      {/* Platform - grassy mound */}
+      <ellipse cx="50" cy="88" rx="35" ry="8" fill="hsl(145, 40%, 50%)" opacity="0.8" />
+      <ellipse cx="50" cy="86" rx="32" ry="6" fill="hsl(145, 45%, 60%)" opacity="0.9" />
       
-      {/* Body screen/panel */}
-      <rect x="10" y="14" width="4" height="3" className={cn(
-        "animate-screen-glow",
-        isCelebrating ? "fill-glow-gold/80" : "fill-accent/60"
+      {/* Robot body - rounded and cute */}
+      <ellipse cx="50" cy="60" rx="20" ry="22" fill="url(#robotBody)" />
+      
+      {/* Belly screen */}
+      <ellipse cx="50" cy="60" rx="12" ry="10" fill="url(#screenGlow)" className={cn(
+        (isCelebrating || isExcited) && "animate-screen-glow"
       )} />
+      <ellipse cx="50" cy="58" rx="8" ry="6" fill="hsl(145, 70%, 85%)" opacity="0.5" />
       
-      {/* Body buttons */}
-      <rect x="10" y="18" width="1" height="1" className="fill-green-500/80" />
-      <rect x="13" y="18" width="1" height="1" className="fill-accent/80" />
+      {/* Heart on screen */}
+      {(isCelebrating || isExcited) && (
+        <path d="M 50 56 Q 47 53 44 56 Q 44 60 50 65 Q 56 60 56 56 Q 53 53 50 56" fill="hsl(350, 65%, 70%)" opacity="0.8" />
+      )}
       
-      {/* Robot head */}
-      <rect x="8" y="4" width="8" height="7" className="fill-primary" />
-      <rect x="7" y="5" width="1" height="5" className="fill-primary/80" />
-      <rect x="16" y="5" width="1" height="5" className="fill-primary/80" />
+      {/* Head - rounded */}
+      <ellipse cx="50" cy="28" rx="18" ry="16" fill="url(#robotGlow)" />
       
       {/* Antenna */}
-      <rect x="11" y="1" width="2" height="3" className="fill-muted-foreground/60" />
-      <rect x="10" y="1" width="4" height="1" className={cn(
-        "fill-accent",
+      <line x1="50" y1="12" x2="50" y2="6" stroke="hsl(200, 30%, 55%)" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="50" cy="5" r="4" fill={isCelebrating || isExcited ? "hsl(45, 80%, 65%)" : "hsl(180, 50%, 65%)"} className={cn(
         (isCelebrating || isExcited) && "antenna-blink"
       )} />
+      
+      {/* Ears/sensors */}
+      <ellipse cx="30" cy="28" rx="5" ry="8" fill="hsl(200, 35%, 70%)" />
+      <ellipse cx="70" cy="28" rx="5" ry="8" fill="hsl(200, 35%, 70%)" />
       
       {/* Eyes */}
       {isSleepy ? (
         <>
-          <rect x="9" y="7" width="2" height="1" className="fill-accent/40" />
-          <rect x="13" y="7" width="2" height="1" className="fill-accent/40" />
+          <path d="M 40 28 Q 44 30 48 28" stroke="hsl(200, 50%, 40%)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M 52 28 Q 56 30 60 28" stroke="hsl(200, 50%, 40%)" strokeWidth="2" fill="none" strokeLinecap="round" />
         </>
       ) : isCelebrating || isExcited ? (
         <>
-          <rect x="9" y="6" width="2" height="2" className="fill-glow-gold" />
-          <rect x="13" y="6" width="2" height="2" className="fill-glow-gold" />
+          <ellipse cx="42" cy="26" rx="6" ry="7" fill="hsl(40, 30%, 95%)" />
+          <ellipse cx="42" cy="26" rx="4" ry="5" fill="hsl(200, 60%, 45%)" />
+          <circle cx="43" cy="25" r="2" fill="white" opacity="0.8" />
+          <ellipse cx="58" cy="26" rx="6" ry="7" fill="hsl(40, 30%, 95%)" />
+          <ellipse cx="58" cy="26" rx="4" ry="5" fill="hsl(200, 60%, 45%)" />
+          <circle cx="59" cy="25" r="2" fill="white" opacity="0.8" />
         </>
       ) : (
         <>
-          <rect x="9" y="6" width="2" height="2" className="fill-accent character-blink" />
-          <rect x="13" y="6" width="2" height="2" className="fill-accent character-blink" />
+          <ellipse cx="42" cy="26" rx="5" ry="6" fill="hsl(40, 30%, 95%)" />
+          <ellipse cx="42" cy="26" rx="3" ry="4" fill="hsl(200, 60%, 45%)" className="character-blink" />
+          <circle cx="43" cy="25" r="1.5" fill="white" opacity="0.7" />
+          <ellipse cx="58" cy="26" rx="5" ry="6" fill="hsl(40, 30%, 95%)" />
+          <ellipse cx="58" cy="26" rx="3" ry="4" fill="hsl(200, 60%, 45%)" className="character-blink" />
+          <circle cx="59" cy="25" r="1.5" fill="white" opacity="0.7" />
+        </>
+      )}
+      
+      {/* Blush */}
+      {(isCelebrating || isExcited) && (
+        <>
+          <ellipse cx="35" cy="32" rx="4" ry="2.5" fill="hsl(350, 70%, 80%)" opacity="0.5" />
+          <ellipse cx="65" cy="32" rx="4" ry="2.5" fill="hsl(350, 70%, 80%)" opacity="0.5" />
         </>
       )}
       
       {/* Mouth */}
-      <rect x="10" y="9" width="4" height="1" className={cn(
-        "fill-muted-foreground/60",
-        (isCelebrating || isExcited) && "fill-glow-gold/60"
-      )} />
+      {isCelebrating || isExcited ? (
+        <path d="M 44 36 Q 50 42 56 36" stroke="hsl(200, 40%, 45%)" strokeWidth="2" fill="none" strokeLinecap="round" />
+      ) : (
+        <ellipse cx="50" cy="36" rx="4" ry="2" fill="hsl(200, 40%, 50%)" opacity="0.6" />
+      )}
       
       {/* Arms */}
       {isCelebrating ? (
         <>
-          <rect x="5" y="12" width="2" height="3" className="fill-primary/70 arm-wave-left" />
-          <rect x="4" y="11" width="2" height="2" className="fill-primary/60 arm-wave-left" />
-          <rect x="17" y="12" width="2" height="3" className="fill-primary/70 arm-wave-right" />
-          <rect x="18" y="11" width="2" height="2" className="fill-primary/60 arm-wave-right" />
+          <path d="M 30 55 Q 20 45 15 35" stroke="hsl(200, 35%, 65%)" strokeWidth="8" fill="none" strokeLinecap="round" className="arm-wave-left" />
+          <circle cx="15" cy="35" r="5" fill="hsl(200, 40%, 70%)" className="arm-wave-left" />
+          <path d="M 70 55 Q 80 45 85 35" stroke="hsl(200, 35%, 65%)" strokeWidth="8" fill="none" strokeLinecap="round" className="arm-wave-right" />
+          <circle cx="85" cy="35" r="5" fill="hsl(200, 40%, 70%)" className="arm-wave-right" />
         </>
       ) : (
         <>
-          <rect x="5" y="13" width="2" height="4" className={cn("fill-primary/70", isTyping && "robot-arm-left")} />
-          <rect x="4" y="16" width="2" height="2" className={cn("fill-primary/60", isTyping && "robot-arm-left")} />
-          <rect x="17" y="13" width="2" height="4" className={cn("fill-primary/70", isTyping && "robot-arm-right")} />
-          <rect x="18" y="16" width="2" height="2" className={cn("fill-primary/60", isTyping && "robot-arm-right")} />
+          <path d="M 30 50 Q 22 60 25 72" stroke="hsl(200, 35%, 65%)" strokeWidth="7" fill="none" strokeLinecap="round" className={cn(isTyping && "robot-arm-left")} />
+          <circle cx="25" cy="72" r="4" fill="hsl(200, 40%, 70%)" className={cn(isTyping && "robot-arm-left")} />
+          <path d="M 70 50 Q 78 60 75 72" stroke="hsl(200, 35%, 65%)" strokeWidth="7" fill="none" strokeLinecap="round" className={cn(isTyping && "robot-arm-right")} />
+          <circle cx="75" cy="72" r="4" fill="hsl(200, 40%, 70%)" className={cn(isTyping && "robot-arm-right")} />
         </>
       )}
       
       {/* Feet */}
-      <rect x="9" y="20" width="2" height="1" className="fill-primary/60" />
-      <rect x="13" y="20" width="2" height="1" className="fill-primary/60" />
+      <ellipse cx="40" cy="82" rx="8" ry="5" fill="hsl(200, 35%, 60%)" />
+      <ellipse cx="60" cy="82" rx="8" ry="5" fill="hsl(200, 35%, 60%)" />
       
       {/* ZZZ for sleepy */}
       {isSleepy && (
-        <>
-          <text x="17" y="5" className="fill-muted-foreground/50 text-[3px] font-bold zzz-1">z</text>
-          <text x="19" y="3" className="fill-muted-foreground/40 text-[2px] font-bold zzz-2">z</text>
-        </>
+        <g className="zzz" fill="hsl(200, 40%, 60%)" opacity="0.6">
+          <text x="68" y="18" fontSize="8" fontFamily="Fredoka" className="zzz-1">z</text>
+          <text x="75" y="12" fontSize="6" fontFamily="Fredoka" className="zzz-2">z</text>
+          <text x="80" y="8" fontSize="5" fontFamily="Fredoka" className="zzz-3">z</text>
+        </g>
       )}
 
       <style>{`
         .antenna-blink {
-          animation: antenna-blink 0.5s ease-in-out infinite;
+          animation: antenna-blink 0.6s ease-in-out infinite;
         }
         
         @keyframes antenna-blink {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
+          50% { opacity: 0.4; }
         }
         
         .robot-arm-left {
@@ -130,7 +172,7 @@ export function RobotCompanion({ mood }: RobotCompanionProps) {
         
         @keyframes robot-arm {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-2px); }
+          50% { transform: translateY(-3px); }
         }
       `}</style>
     </svg>

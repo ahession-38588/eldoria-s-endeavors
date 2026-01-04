@@ -13,115 +13,152 @@ export function CatCompanion({ mood }: CatCompanionProps) {
 
   return (
     <svg
-      viewBox="0 0 24 24"
-      className="w-full h-full pixel-art"
-      style={{ imageRendering: 'pixelated' }}
+      viewBox="0 0 100 100"
+      className="w-full h-full"
+      style={{ filter: 'url(#watercolor)' }}
     >
-      {/* Cushion/bed */}
-      <rect x="4" y="16" width="16" height="4" className="fill-secondary" />
-      <rect x="5" y="15" width="14" height="1" className="fill-secondary/80" />
+      <defs>
+        {/* Watercolor effect filter */}
+        <filter id="watercolor" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" />
+          <feGaussianBlur stdDeviation="0.5" />
+        </filter>
+        
+        {/* Soft gradient for fur */}
+        <radialGradient id="catFur" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="hsl(35, 70%, 75%)" />
+          <stop offset="100%" stopColor="hsl(30, 55%, 60%)" />
+        </radialGradient>
+        
+        <radialGradient id="catBelly" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="hsl(40, 60%, 92%)" />
+          <stop offset="100%" stopColor="hsl(35, 50%, 82%)" />
+        </radialGradient>
+      </defs>
       
       {/* Celebration sparkles */}
       {isCelebrating && (
-        <>
-          <rect x="3" y="5" width="1" height="1" className="fill-glow-gold sparkle-1" />
-          <rect x="20" y="4" width="1" height="1" className="fill-glow-gold sparkle-2" />
-          <rect x="6" y="3" width="1" height="1" className="fill-starlight sparkle-3" />
-          <rect x="17" y="6" width="1" height="1" className="fill-starlight sparkle-4" />
-        </>
+        <g className="sparkles">
+          <circle cx="20" cy="25" r="3" fill="hsl(45, 90%, 70%)" className="sparkle-1" opacity="0.8" />
+          <circle cx="80" cy="20" r="2.5" fill="hsl(200, 70%, 80%)" className="sparkle-2" opacity="0.8" />
+          <circle cx="15" cy="50" r="2" fill="hsl(340, 60%, 80%)" className="sparkle-3" opacity="0.7" />
+          <circle cx="85" cy="45" r="2" fill="hsl(145, 50%, 70%)" className="sparkle-4" opacity="0.7" />
+        </g>
       )}
       
-      {/* Cat body */}
-      <rect x="7" y="12" width="10" height="4" className="fill-glow-gold/80" />
-      <rect x="6" y="13" width="1" height="2" className="fill-glow-gold/70" />
-      <rect x="17" y="13" width="1" height="2" className="fill-glow-gold/70" />
+      {/* Cushion - soft and round */}
+      <ellipse cx="50" cy="82" rx="35" ry="12" fill="hsl(340, 45%, 75%)" opacity="0.8" />
+      <ellipse cx="50" cy="80" rx="32" ry="10" fill="hsl(340, 50%, 82%)" opacity="0.9" />
       
-      {/* Cat head */}
-      <rect x="9" y="7" width="6" height="5" className="fill-glow-gold/90" />
-      <rect x="8" y="8" width="1" height="3" className="fill-glow-gold/80" />
-      <rect x="15" y="8" width="1" height="3" className="fill-glow-gold/80" />
+      {/* Cat body - soft rounded shape */}
+      <ellipse cx="50" cy="62" rx="22" ry="18" fill="url(#catFur)" />
+      <ellipse cx="50" cy="68" rx="16" ry="10" fill="url(#catBelly)" opacity="0.9" />
+      
+      {/* Tail - curvy and soft */}
+      <path 
+        d="M 72 60 Q 82 55 85 45 Q 88 38 82 35" 
+        stroke="hsl(30, 55%, 60%)" 
+        strokeWidth="6" 
+        strokeLinecap="round"
+        fill="none"
+        className={cn((isCelebrating || isExcited) && "tail-wag")}
+      />
+      
+      {/* Head - round and soft */}
+      <ellipse cx="50" cy="38" rx="20" ry="18" fill="url(#catFur)" />
       
       {/* Ears */}
-      <rect x="9" y="5" width="2" height="2" className="fill-glow-gold/90" />
-      <rect x="9" y="6" width="1" height="1" className="fill-accent/30" />
-      <rect x="13" y="5" width="2" height="2" className="fill-glow-gold/90" />
-      <rect x="14" y="6" width="1" height="1" className="fill-accent/30" />
+      <path d="M 32 28 Q 35 15 42 22" fill="hsl(35, 65%, 70%)" />
+      <path d="M 35 25 Q 37 18 41 23" fill="hsl(340, 50%, 80%)" opacity="0.6" />
+      <path d="M 68 28 Q 65 15 58 22" fill="hsl(35, 65%, 70%)" />
+      <path d="M 65 25 Q 63 18 59 23" fill="hsl(340, 50%, 80%)" opacity="0.6" />
       
+      {/* Face details */}
       {/* Eyes */}
       {isSleepy ? (
         <>
-          <rect x="10" y="9" width="2" height="1" className="fill-primary/60" />
-          <rect x="13" y="9" width="2" height="1" className="fill-primary/60" />
+          <path d="M 42 38 Q 45 40 48 38" stroke="hsl(25, 40%, 35%)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M 52 38 Q 55 40 58 38" stroke="hsl(25, 40%, 35%)" strokeWidth="2" fill="none" strokeLinecap="round" />
         </>
       ) : isCelebrating || isExcited ? (
         <>
-          <rect x="10" y="9" width="1" height="1" className="fill-primary" />
-          <rect x="11" y="8" width="1" height="1" className="fill-primary/50" />
-          <rect x="13" y="9" width="1" height="1" className="fill-primary" />
-          <rect x="13" y="8" width="1" height="1" className="fill-primary/50" />
+          <ellipse cx="43" cy="36" rx="5" ry="6" fill="hsl(145, 50%, 35%)" />
+          <circle cx="44" cy="35" r="2" fill="white" opacity="0.8" />
+          <ellipse cx="57" cy="36" rx="5" ry="6" fill="hsl(145, 50%, 35%)" />
+          <circle cx="58" cy="35" r="2" fill="white" opacity="0.8" />
         </>
       ) : (
         <>
-          <rect x="10" y="8" width="1" height="2" className="fill-primary character-blink" />
-          <rect x="13" y="8" width="1" height="2" className="fill-primary character-blink" />
+          <ellipse cx="43" cy="36" rx="4" ry="5" fill="hsl(145, 50%, 35%)" className="character-blink" />
+          <circle cx="44" cy="35" r="1.5" fill="white" opacity="0.7" />
+          <ellipse cx="57" cy="36" rx="4" ry="5" fill="hsl(145, 50%, 35%)" className="character-blink" />
+          <circle cx="58" cy="35" r="1.5" fill="white" opacity="0.7" />
         </>
       )}
       
       {/* Nose */}
-      <rect x="12" y="10" width="1" height="1" className="fill-accent/70" />
+      <ellipse cx="50" cy="44" rx="3" ry="2" fill="hsl(350, 60%, 70%)" />
+      
+      {/* Mouth */}
+      <path d="M 50 46 Q 50 48 47 48" stroke="hsl(25, 40%, 40%)" strokeWidth="1" fill="none" strokeLinecap="round" />
+      <path d="M 50 46 Q 50 48 53 48" stroke="hsl(25, 40%, 40%)" strokeWidth="1" fill="none" strokeLinecap="round" />
       
       {/* Whiskers */}
-      <rect x="7" y="10" width="2" height="1" className="fill-muted-foreground/40" />
-      <rect x="15" y="10" width="2" height="1" className="fill-muted-foreground/40" />
+      <g stroke="hsl(25, 30%, 50%)" strokeWidth="0.8" opacity="0.6">
+        <line x1="32" y1="42" x2="22" y2="40" />
+        <line x1="32" y1="45" x2="22" y2="46" />
+        <line x1="68" y1="42" x2="78" y2="40" />
+        <line x1="68" y1="45" x2="78" y2="46" />
+      </g>
       
-      {/* Tail */}
-      <rect 
-        x="17" y="11" width="3" height="2" 
-        className={cn("fill-glow-gold/80", (isCelebrating || isExcited) && "tail-wag")} 
-      />
-      <rect 
-        x="19" y="9" width="2" height="2" 
-        className={cn("fill-glow-gold/70", (isCelebrating || isExcited) && "tail-wag")} 
-      />
+      {/* Blush */}
+      {(isCelebrating || isExcited) && (
+        <>
+          <ellipse cx="35" cy="43" rx="4" ry="2.5" fill="hsl(350, 70%, 80%)" opacity="0.5" />
+          <ellipse cx="65" cy="43" rx="4" ry="2.5" fill="hsl(350, 70%, 80%)" opacity="0.5" />
+        </>
+      )}
       
       {/* Paws */}
-      <rect x="8" y="15" width="2" height="1" className={cn("fill-[hsl(var(--starlight))]", isTyping && "paw-knead-left")} />
-      <rect x="14" y="15" width="2" height="1" className={cn("fill-[hsl(var(--starlight))]", isTyping && "paw-knead-right")} />
+      <ellipse cx="38" cy="75" rx="6" ry="4" fill="hsl(35, 50%, 65%)" className={cn(isTyping && "paw-knead-left")} />
+      <ellipse cx="62" cy="75" rx="6" ry="4" fill="hsl(35, 50%, 65%)" className={cn(isTyping && "paw-knead-right")} />
       
-      {/* Ball of yarn */}
-      <rect x="3" y="17" width="2" height="2" className="fill-accent/60" />
-      <rect x="2" y="18" width="1" height="1" className="fill-accent/40" />
+      {/* Yarn ball */}
+      <circle cx="22" cy="78" r="6" fill="hsl(200, 60%, 70%)" opacity="0.8" />
+      <path d="M 18 76 Q 22 80 26 76" stroke="hsl(200, 50%, 55%)" strokeWidth="1" fill="none" />
       
       {/* ZZZ for sleepy */}
       {isSleepy && (
-        <>
-          <text x="17" y="6" className="fill-muted-foreground/50 text-[3px] font-bold zzz-1">z</text>
-          <text x="19" y="4" className="fill-muted-foreground/40 text-[2px] font-bold zzz-2">z</text>
-        </>
+        <g className="zzz" fill="hsl(200, 40%, 60%)" opacity="0.6">
+          <text x="68" y="28" fontSize="8" fontFamily="Fredoka" className="zzz-1">z</text>
+          <text x="75" y="20" fontSize="6" fontFamily="Fredoka" className="zzz-2">z</text>
+          <text x="80" y="14" fontSize="5" fontFamily="Fredoka" className="zzz-3">z</text>
+        </g>
       )}
 
       <style>{`
         .tail-wag {
-          animation: tail-wag 0.3s ease-in-out infinite;
-          transform-origin: left center;
+          animation: tail-wag 0.4s ease-in-out infinite;
+          transform-origin: 72px 60px;
         }
         
         @keyframes tail-wag {
           0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(10deg); }
+          50% { transform: rotate(15deg); }
         }
         
         .paw-knead-left {
-          animation: paw-knead 0.8s ease-in-out infinite;
+          animation: paw-knead 1s ease-in-out infinite;
         }
         
         .paw-knead-right {
-          animation: paw-knead 0.8s ease-in-out infinite 0.4s;
+          animation: paw-knead 1s ease-in-out infinite 0.5s;
         }
         
         @keyframes paw-knead {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-1px); }
+          0%, 100% { transform: translateY(0) scaleY(1); }
+          50% { transform: translateY(-2px) scaleY(0.9); }
         }
       `}</style>
     </svg>
