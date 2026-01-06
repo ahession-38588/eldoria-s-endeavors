@@ -1,13 +1,15 @@
-import { Target, Sparkles, Clock, X, Check } from 'lucide-react';
+import { Target, Sparkles, Clock, X, Check, GripHorizontal } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
-import { useMemo, useState, useRef } from 'react';
-import { format, parse, addMinutes, isBefore, isAfter, differenceInMinutes } from 'date-fns';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
+import { format, parse } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Task } from '@/lib/types';
 
 const SLOT_HEIGHT = 48; // Height in pixels for 15 minutes
 const MINUTES_PER_SLOT = 15;
+const MIN_DURATION = 15;
+const MAX_DURATION = 240;
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}m`;
@@ -34,6 +36,13 @@ interface ScheduledTask {
   height: number;
 }
 
+interface ResizeState {
+  taskId: string;
+  startY: number;
+  startHeight: number;
+  startDuration: number;
+}
+
 export function FocusPane() {
   const { state, getFocusedTasks, dispatch } = useApp();
   const focusedTasks = getFocusedTasks();
@@ -43,6 +52,8 @@ export function FocusPane() {
   const [endTime, setEndTime] = useState(scheduleSettings.endTime);
   const [draggingTask, setDraggingTask] = useState<{ task: Task; listId: string } | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
+  const [resizing, setResizing] = useState<ResizeState | null>(null);
+  const [previewDuration, setPreviewDuration] = useState<number | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   // Calculate time slots
@@ -141,6 +152,51 @@ export function FocusPane() {
   const handleRemove = (taskId: string) => {
     dispatch({ type: 'REMOVE_FROM_FOCUS', payload: { taskId } });
   };
+
+  // Resize handlers
+  const handleResizeStart = useCallback((e: React.MouseEvent, task: Task) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setResizing({
+      taskId: task.id,
+      startY: e.clientY,
+      startHeight: ((task.duration || 30) / MINUTES_PER_SLOT) * SLOT_HEIGHT,
+      startDuration: task.duration || 30,
+    });
+    setPreviewDuration(task.duration || 30);
+  }, []);
+
+  // Attach global mouse events for resize
+  useEffect(() => {
+    if (!resizing) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - resizing.startY;
+      const deltaDuration = Math.round(deltaY / SLOT_HEIGHT) * MINUTES_PER_SLOT;
+      const newDuration = Math.max(MIN_DURATION, Math.min(MAX_DURATION, resizing.startDuration + deltaDuration));
+      setPreviewDuration(newDuration);
+    };
+    
+    const handleMouseUp = () => {
+      if (previewDuration !== null) {
+        dispatch({
+          type: 'UPDATE_TASK_DURATION',
+          payload: { taskId: resizing.taskId, duration: previewDuration },
+        });
+      }
+      setResizing(null);
+      setPreviewDuration(null);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizing, previewDuration, dispatch]);
 
   return (
     <div className="h-full flex flex-col mystical-card rounded-xl p-5 glow-border">
@@ -252,51 +308,76 @@ export function FocusPane() {
 
             {/* Scheduled tasks overlay */}
             <div className="absolute inset-0 left-16 pointer-events-none">
-              {scheduledTasks.map(({ task, listId, top, height }) => (
-                <div
-                  key={task.id}
-                  className={cn(
-                    "absolute left-1 right-1 rounded-lg p-2 pointer-events-auto",
-                    "bg-primary/20 border border-primary/40 hover:border-primary/60",
-                    "transition-all cursor-pointer group",
-                    task.completed && "opacity-50 line-through"
-                  )}
-                  style={{ 
-                    top: `${top}px`, 
-                    height: `${Math.max(height - 4, 32)}px`,
-                    minHeight: '32px'
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-1 h-full">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {task.text}
-                      </p>
-                      {height > 40 && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {format(new Date(task.scheduledTime!), 'h:mm a')} • {formatDuration(task.duration || 30)}
+              {scheduledTasks.map(({ task, listId, top, height }) => {
+                const isResizing = resizing?.taskId === task.id;
+                const displayDuration = isResizing && previewDuration !== null 
+                  ? previewDuration 
+                  : (task.duration || 30);
+                const displayHeight = isResizing && previewDuration !== null
+                  ? (previewDuration / MINUTES_PER_SLOT) * SLOT_HEIGHT
+                  : height;
+                
+                return (
+                  <div
+                    key={task.id}
+                    className={cn(
+                      "absolute left-1 right-1 rounded-lg p-2 pointer-events-auto",
+                      "bg-primary/20 border border-primary/40 hover:border-primary/60",
+                      "cursor-pointer group",
+                      isResizing && "border-primary ring-2 ring-primary/30",
+                      task.completed && "opacity-50 line-through"
+                    )}
+                    style={{ 
+                      top: `${top}px`, 
+                      height: `${Math.max(displayHeight - 4, 32)}px`,
+                      minHeight: '32px',
+                      transition: isResizing ? 'none' : 'all 0.2s'
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-1 h-full">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {task.text}
                         </p>
-                      )}
+                        {displayHeight > 40 && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {format(new Date(task.scheduledTime!), 'h:mm a')} • {formatDuration(displayDuration)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleComplete(task.id)}
+                          className="p-1 rounded bg-primary/20 hover:bg-primary/40 text-primary"
+                          title="Complete"
+                        >
+                          <Check className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleUnschedule(task.id)}
+                          className="p-1 rounded bg-muted hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
+                          title="Unschedule"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleComplete(task.id)}
-                        className="p-1 rounded bg-primary/20 hover:bg-primary/40 text-primary"
-                        title="Complete"
-                      >
-                        <Check className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleUnschedule(task.id)}
-                        className="p-1 rounded bg-muted hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
-                        title="Unschedule"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
+                    
+                    {/* Resize handle */}
+                    <div
+                      onMouseDown={(e) => handleResizeStart(e, task)}
+                      className={cn(
+                        "absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize",
+                        "flex items-center justify-center",
+                        "opacity-0 group-hover:opacity-100 transition-opacity",
+                        "hover:bg-primary/20 rounded-b-lg"
+                      )}
+                    >
+                      <GripHorizontal className="w-4 h-3 text-primary/60" />
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
