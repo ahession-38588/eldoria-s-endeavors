@@ -12,6 +12,7 @@ export interface Task {
   completed: boolean;
   createdAt: number;
   duration?: number; // Duration in minutes
+  scheduledTime?: string; // ISO string for scheduled start time
 }
 
 export interface TodoList {

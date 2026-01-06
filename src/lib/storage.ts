@@ -2,11 +2,17 @@ import { Task, TodoList, CompanionStory, CompanionType } from './types';
 
 const STORAGE_KEY = 'fantasy-todo-data';
 
+export interface ScheduleSettings {
+  startTime: string; // HH:mm format
+  endTime: string; // HH:mm format
+}
+
 export interface AppData {
   lists: TodoList[];
   focusedTaskIds: string[];
   companionStory: CompanionStory | null;
   selectedCompanion: CompanionType;
+  scheduleSettings?: ScheduleSettings;
 }
 
 export const generateId = (): string => {
@@ -39,6 +45,7 @@ export const getStoredData = (): AppData => {
         focusedTaskIds: data.focusedTaskIds || [],
         companionStory,
         selectedCompanion: data.selectedCompanion || 'scholar',
+        scheduleSettings: data.scheduleSettings || { startTime: '09:00', endTime: '17:00' },
       };
     }
   } catch (error) {
@@ -49,6 +56,7 @@ export const getStoredData = (): AppData => {
     focusedTaskIds: [],
     companionStory: null,
     selectedCompanion: 'scholar',
+    scheduleSettings: { startTime: '09:00', endTime: '17:00' },
   };
 };
 
