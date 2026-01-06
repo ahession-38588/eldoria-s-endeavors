@@ -6,7 +6,8 @@ import {
   createTask, 
   createList,
   createCompanionStory,
-  AppData 
+  AppData,
+  ScheduleSettings,
 } from './storage';
 
 interface AppState extends AppData {}
@@ -22,6 +23,8 @@ type Action =
   | { type: 'TOGGLE_TASK'; payload: { listId: string; taskId: string } }
   | { type: 'UPDATE_TASK_TEXT'; payload: { listId: string; taskId: string; text: string } }
   | { type: 'UPDATE_TASK_DURATION'; payload: { taskId: string; duration: number | undefined } }
+  | { type: 'SCHEDULE_TASK'; payload: { taskId: string; scheduledTime: string; duration: number } }
+  | { type: 'UNSCHEDULE_TASK'; payload: { taskId: string } }
   | { type: 'MOVE_TO_FOCUS'; payload: { taskId: string } }
   | { type: 'REMOVE_FROM_FOCUS'; payload: { taskId: string } }
   | { type: 'COMPLETE_FOCUSED_TASK'; payload: { taskId: string } }
@@ -31,13 +34,15 @@ type Action =
   | { type: 'CLEAR_COMPANION_STORY' }
   | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } }
   | { type: 'MARK_STORY_READ' }
-  | { type: 'SET_COMPANION_TYPE'; payload: { companionType: CompanionType } };
+  | { type: 'SET_COMPANION_TYPE'; payload: { companionType: CompanionType } }
+  | { type: 'UPDATE_SCHEDULE_SETTINGS'; payload: ScheduleSettings };
 
 const initialState: AppState = {
   lists: [],
   focusedTaskIds: [],
   companionStory: null,
   selectedCompanion: 'scholar',
+  scheduleSettings: { startTime: '09:00', endTime: '17:00' },
 };
 
 const LINES_PER_TASK = 3;
@@ -158,6 +163,35 @@ function reducer(state: AppState, action: Action): AppState {
           tasks: list.tasks.map(task =>
             task.id === action.payload.taskId
               ? { ...task, duration: action.payload.duration }
+              : task
+          ),
+        })),
+      };
+
+    case 'SCHEDULE_TASK':
+      return {
+        ...state,
+        lists: state.lists.map(list => ({
+          ...list,
+          tasks: list.tasks.map(task =>
+            task.id === action.payload.taskId
+              ? { ...task, scheduledTime: action.payload.scheduledTime, duration: action.payload.duration }
+              : task
+          ),
+        })),
+        focusedTaskIds: state.focusedTaskIds.includes(action.payload.taskId)
+          ? state.focusedTaskIds
+          : [...state.focusedTaskIds, action.payload.taskId],
+      };
+
+    case 'UNSCHEDULE_TASK':
+      return {
+        ...state,
+        lists: state.lists.map(list => ({
+          ...list,
+          tasks: list.tasks.map(task =>
+            task.id === action.payload.taskId
+              ? { ...task, scheduledTime: undefined }
               : task
           ),
         })),
@@ -307,6 +341,12 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         selectedCompanion: action.payload.companionType,
+      };
+
+    case 'UPDATE_SCHEDULE_SETTINGS':
+      return {
+        ...state,
+        scheduleSettings: action.payload,
       };
 
     default:
