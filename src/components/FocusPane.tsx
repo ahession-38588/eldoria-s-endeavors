@@ -5,6 +5,7 @@ import { format, parse } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Task } from '@/lib/types';
+import { toast } from 'sonner';
 
 const SLOT_HEIGHT = 48; // Height in pixels for 15 minutes
 const MINUTES_PER_SLOT = 15;
@@ -93,6 +94,47 @@ export function FocusPane() {
       });
   }, [focusedTasks, startTime, endTime]);
 
+  // Check if scheduling a task would overlap with existing tasks
+  const checkOverlap = useCallback((
+    newStartMinutes: number,
+    newDuration: number,
+    excludeTaskId?: string
+  ): boolean => {
+    const newEndMinutes = newStartMinutes + newDuration;
+    
+    for (const { task } of focusedTasks) {
+      if (task.id === excludeTaskId) continue;
+      if (!task.scheduledTime) continue;
+      
+      const taskTime = new Date(task.scheduledTime);
+      const taskStart = taskTime.getHours() * 60 + taskTime.getMinutes();
+      const taskEnd = taskStart + (task.duration || 30);
+      
+      // Check for overlap: two ranges overlap if one starts before the other ends
+      if (newStartMinutes < taskEnd && newEndMinutes > taskStart) {
+        return true;
+      }
+    }
+    return false;
+  }, [focusedTasks]);
+
+  // Check if a specific slot is occupied by any task
+  const isSlotOccupied = useCallback((slotMinutes: number, excludeTaskId?: string): boolean => {
+    for (const { task } of focusedTasks) {
+      if (task.id === excludeTaskId) continue;
+      if (!task.scheduledTime) continue;
+      
+      const taskTime = new Date(task.scheduledTime);
+      const taskStart = taskTime.getHours() * 60 + taskTime.getMinutes();
+      const taskEnd = taskStart + (task.duration || 30);
+      
+      if (slotMinutes >= taskStart && slotMinutes < taskEnd) {
+        return true;
+      }
+    }
+    return false;
+  }, [focusedTasks, startTime, endTime]);
+
   // Unscheduled focused tasks
   const unscheduledTasks = focusedTasks.filter(({ task }) => !task.scheduledTime);
 
@@ -124,8 +166,19 @@ export function FocusPane() {
     if (!draggingTask) return;
     
     const slotTime = timeSlots[slotIndex];
-    const today = new Date();
     const [hours, mins] = slotTime.split(':').map(Number);
+    const slotMinutes = hours * 60 + mins;
+    const duration = draggingTask.task.duration || 30;
+    
+    // Check for overlap before scheduling
+    if (checkOverlap(slotMinutes, duration, draggingTask.task.id)) {
+      toast.error('Cannot schedule here - overlaps with another task');
+      setDraggingTask(null);
+      setDragOverSlot(null);
+      return;
+    }
+    
+    const today = new Date();
     today.setHours(hours, mins, 0, 0);
     
     dispatch({
@@ -133,7 +186,7 @@ export function FocusPane() {
       payload: {
         taskId: draggingTask.task.id,
         scheduledTime: today.toISOString(),
-        duration: draggingTask.task.duration || 30,
+        duration: duration,
       },
     });
     
@@ -171,11 +224,25 @@ export function FocusPane() {
   useEffect(() => {
     if (!resizing) return;
     
+    // Find the task being resized to get its start time
+    const resizingTask = focusedTasks.find(({ task }) => task.id === resizing.taskId);
+    
     const handleMouseMove = (e: MouseEvent) => {
       const deltaY = e.clientY - resizing.startY;
       const deltaDuration = Math.round(deltaY / SLOT_HEIGHT) * MINUTES_PER_SLOT;
       const newDuration = Math.max(MIN_DURATION, Math.min(MAX_DURATION, resizing.startDuration + deltaDuration));
-      setPreviewDuration(newDuration);
+      
+      // Check overlap before updating preview
+      if (resizingTask?.task.scheduledTime) {
+        const taskTime = new Date(resizingTask.task.scheduledTime);
+        const taskStart = taskTime.getHours() * 60 + taskTime.getMinutes();
+        
+        if (!checkOverlap(taskStart, newDuration, resizing.taskId)) {
+          setPreviewDuration(newDuration);
+        }
+      } else {
+        setPreviewDuration(newDuration);
+      }
     };
     
     const handleMouseUp = () => {
@@ -196,7 +263,7 @@ export function FocusPane() {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [resizing, previewDuration, dispatch]);
+  }, [resizing, previewDuration, dispatch, focusedTasks, checkOverlap]);
 
   return (
     <div className="h-full flex flex-col mystical-card rounded-xl p-5 glow-border">
@@ -279,6 +346,8 @@ export function FocusPane() {
             {timeSlots.map((time, index) => {
               const isHour = time.endsWith(':00');
               const isHalfHour = time.endsWith(':30');
+              const slotMinutes = timeToMinutes(time);
+              const isOccupied = draggingTask ? isSlotOccupied(slotMinutes, draggingTask.task.id) : false;
               
               return (
                 <div
@@ -288,7 +357,8 @@ export function FocusPane() {
                   className={cn(
                     "relative flex items-start border-t transition-colors",
                     isHour ? "border-border/60" : "border-border/20",
-                    dragOverSlot === index && "bg-primary/10"
+                    dragOverSlot === index && !isOccupied && "bg-primary/10",
+                    dragOverSlot === index && isOccupied && "bg-destructive/10"
                   )}
                   style={{ height: SLOT_HEIGHT }}
                 >
