@@ -4,11 +4,21 @@ import { ListsArea } from '@/components/ListsArea';
 import { AppProvider } from '@/lib/AppContext';
 import { Sparkles } from 'lucide-react';
 import AdBanner from '@/components/AdBanner';
+import pixelSkyBg from '@/assets/pixel-sky-bg.png';
 
 const Index = () => {
   return (
     <AppProvider>
-      <div className="min-h-screen w-full starfield">
+      <div 
+        className="min-h-screen w-full"
+        style={{
+          backgroundImage: `url(${pixelSkyBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          imageRendering: 'pixelated'
+        }}
+      >
         {/* Header */}
         <header className="py-4 px-6 border-b border-border/30">
           <div className="max-w-[1800px] mx-auto flex items-center gap-3">
