@@ -19,15 +19,17 @@ const AdBanner = () => {
   return (
     <>
       {/* Pixel art cottage decoration - fixed at bottom, above ad */}
-      <img 
-        src={pixelCottage} 
-        alt="Pixel art cottage landscape" 
-        className="fixed left-0 right-0 w-full h-auto pointer-events-none z-40"
-        style={{ 
-          imageRendering: 'pixelated',
-          bottom: '94px' // Height of ad banner
-        }}
-      />
+      <div 
+        className="fixed left-0 right-0 z-[45] pointer-events-none"
+        style={{ bottom: '94px' }}
+      >
+        <img 
+          src={pixelCottage} 
+          alt="Pixel art cottage landscape" 
+          className="w-full h-auto block"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      </div>
       <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border z-50">
         <div className="max-w-[1800px] mx-auto px-4 py-2 flex items-center justify-center">
           <ins
