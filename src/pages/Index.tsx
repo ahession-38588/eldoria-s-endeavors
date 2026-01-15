@@ -20,9 +20,9 @@ const Index = () => {
         }}
       >
         {/* Header */}
-        <header className="py-4 px-6 border-b border-border/30">
+        <header className="py-4 px-6 border-b border-border/30 bg-card/30 backdrop-blur-sm">
           <div className="max-w-[1800px] mx-auto flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-primary" />
+            <Sparkles className="w-6 h-6 text-accent" />
             <h1 className="font-display text-2xl text-gradient">Fantasy Quest Log</h1>
           </div>
         </header>
