@@ -2,7 +2,7 @@ import { FocusPane } from '@/components/FocusPane';
 import { BodyDoublingPane } from '@/components/BodyDoublingPane';
 import { ListsArea } from '@/components/ListsArea';
 
-import { Sparkles, BarChart3 } from 'lucide-react';
+import { Sparkles, BarChart3, Scroll } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdBanner from '@/components/AdBanner';
 import pixelSkyBg from '@/assets/pixel-sky-bg.png';
@@ -24,7 +24,14 @@ const Index = () => {
           <div className="max-w-[1800px] mx-auto flex items-center gap-3">
             <Sparkles className="w-6 h-6 text-accent" />
             <h1 className="font-display text-2xl text-gradient">Fantasy Quest Log</h1>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-1">
+              <Link
+                to="/quests"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <Scroll className="w-4 h-4" />
+                <span className="hidden sm:inline">Quests</span>
+              </Link>
               <Link
                 to="/stats"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"

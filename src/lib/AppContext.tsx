@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Task, TodoList, CompanionStory, CompanionType } from './types';
+import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory } from './types';
 import { 
   getStoredData, 
   saveData, 
   createTask, 
   createList,
   createCompanionStory,
+  generateId,
   AppData,
   ScheduleSettings,
 } from './storage';
@@ -35,7 +36,11 @@ type Action =
   | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } }
   | { type: 'MARK_STORY_READ' }
   | { type: 'SET_COMPANION_TYPE'; payload: { companionType: CompanionType } }
-  | { type: 'UPDATE_SCHEDULE_SETTINGS'; payload: ScheduleSettings };
+  | { type: 'UPDATE_SCHEDULE_SETTINGS'; payload: ScheduleSettings }
+  | { type: 'ADD_QUEST'; payload: { title: string; description?: string; category: QuestCategory } }
+  | { type: 'COMPLETE_QUEST'; payload: { questId: string } }
+  | { type: 'RESET_QUEST'; payload: { questId: string } }
+  | { type: 'DELETE_QUEST'; payload: { questId: string } };
 
 const initialState: AppState = {
   lists: [],
@@ -43,6 +48,7 @@ const initialState: AppState = {
   companionStory: null,
   selectedCompanion: 'scholar',
   scheduleSettings: { startTime: '09:00', endTime: '17:00' },
+  quests: [],
 };
 
 const LINES_PER_TASK = 3;
@@ -347,6 +353,53 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         scheduleSettings: action.payload,
+      };
+
+    case 'ADD_QUEST':
+      return {
+        ...state,
+        quests: [...state.quests, {
+          id: generateId(),
+          title: action.payload.title,
+          description: action.payload.description,
+          category: action.payload.category,
+          completionCount: 0,
+          isComplete: false,
+          createdAt: Date.now(),
+        }],
+      };
+
+    case 'COMPLETE_QUEST': {
+      let updatedStory = state.companionStory;
+      if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
+        updatedStory = {
+          ...updatedStory,
+          revealedLines: Math.min(updatedStory.revealedLines + LINES_PER_TASK, updatedStory.totalLines),
+        };
+      }
+      return {
+        ...state,
+        quests: state.quests.map(q =>
+          q.id === action.payload.questId
+            ? { ...q, isComplete: true, completionCount: q.completionCount + 1, lastCompleted: Date.now() }
+            : q
+        ),
+        companionStory: updatedStory,
+      };
+    }
+
+    case 'RESET_QUEST':
+      return {
+        ...state,
+        quests: state.quests.map(q =>
+          q.id === action.payload.questId ? { ...q, isComplete: false } : q
+        ),
+      };
+
+    case 'DELETE_QUEST':
+      return {
+        ...state,
+        quests: state.quests.filter(q => q.id !== action.payload.questId),
       };
 
     default:

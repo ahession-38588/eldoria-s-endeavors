@@ -30,3 +30,16 @@ export interface CompanionStory {
   revealedLines: number;
   lastReadLine: number; // Track which lines user has read
 }
+
+export type QuestCategory = 'fitness' | 'cleaning' | 'study' | 'craft' | 'social' | 'other';
+
+export interface Quest {
+  id: string;
+  title: string;
+  description?: string;
+  category: QuestCategory;
+  completionCount: number;
+  lastCompleted?: number; // timestamp
+  isComplete: boolean; // current cycle complete — manually reset
+  createdAt: number;
+}
