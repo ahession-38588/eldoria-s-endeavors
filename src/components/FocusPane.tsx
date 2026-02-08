@@ -390,10 +390,13 @@ export function FocusPane() {
                 return (
                   <div
                     key={task.id}
+                    draggable={!isResizing}
+                    onDragStart={() => handleDragStart(task, listId)}
+                    onDragEnd={() => { setDraggingTask(null); setDragOverSlot(null); }}
                     className={cn(
                       "absolute left-1 right-1 rounded-lg p-2 pointer-events-auto",
                       "bg-primary/20 border border-primary/40 hover:border-primary/60",
-                      "cursor-pointer group",
+                      "cursor-grab active:cursor-grabbing group",
                       isResizing && "border-primary ring-2 ring-primary/30",
                       task.completed && "opacity-50 line-through"
                     )}
