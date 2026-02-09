@@ -14,6 +14,7 @@ export interface AppData {
   selectedCompanion: CompanionType;
   scheduleSettings?: ScheduleSettings;
   quests: Quest[];
+  questBoardPosition: number;
 }
 
 export const generateId = (): string => {
@@ -48,6 +49,7 @@ export const getStoredData = (): AppData => {
         selectedCompanion: data.selectedCompanion || 'scholar',
         scheduleSettings: data.scheduleSettings || { startTime: '09:00', endTime: '17:00' },
         quests: data.quests || [],
+        questBoardPosition: data.questBoardPosition || 0,
       };
     }
   } catch (error) {
@@ -60,6 +62,7 @@ export const getStoredData = (): AppData => {
     selectedCompanion: 'scholar',
     scheduleSettings: { startTime: '09:00', endTime: '17:00' },
     quests: [],
+    questBoardPosition: 0,
   };
 };
 

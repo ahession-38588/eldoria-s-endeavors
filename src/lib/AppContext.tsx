@@ -40,7 +40,8 @@ type Action =
   | { type: 'ADD_QUEST'; payload: { title: string; description?: string; category: QuestCategory } }
   | { type: 'COMPLETE_QUEST'; payload: { questId: string } }
   | { type: 'RESET_QUEST'; payload: { questId: string } }
-  | { type: 'DELETE_QUEST'; payload: { questId: string } };
+  | { type: 'DELETE_QUEST'; payload: { questId: string } }
+  | { type: 'SET_QUEST_BOARD_POSITION'; payload: { position: number } };
 
 const initialState: AppState = {
   lists: [],
@@ -49,6 +50,7 @@ const initialState: AppState = {
   selectedCompanion: 'scholar',
   scheduleSettings: { startTime: '09:00', endTime: '17:00' },
   quests: [],
+  questBoardPosition: 0,
 };
 
 const LINES_PER_TASK = 3;
@@ -400,6 +402,12 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         quests: state.quests.filter(q => q.id !== action.payload.questId),
+      };
+
+    case 'SET_QUEST_BOARD_POSITION':
+      return {
+        ...state,
+        questBoardPosition: action.payload.position,
       };
 
     default:
