@@ -5,14 +5,14 @@ import { ListsArea } from '@/components/ListsArea';
 import { Sparkles, BarChart3, Scroll } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdBanner from '@/components/AdBanner';
-import pixelSkyBg from '@/assets/pixel-sky-bg.png';
+import elfVillageBg from '@/assets/elf-village-bg.webp';
 
 const Index = () => {
   return (
     <div 
         className="min-h-screen w-full"
         style={{
-          backgroundImage: `url(${pixelSkyBg})`,
+          backgroundImage: `url(${elfVillageBg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
