@@ -1,3 +1,4 @@
+/* QuestBoard page */
 import { useState, useCallback } from 'react';
 import { useApp } from '@/lib/AppContext';
 import { Link } from 'react-router-dom';

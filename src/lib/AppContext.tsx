@@ -1,3 +1,4 @@
+/* AppContext - global state */
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory } from './types';
 import { 
