@@ -88,25 +88,68 @@ export default function QuestBoard() {
             <DiceRoller onRoll={handleRoll} disabled={quests.length === 0} />
           </div>
 
-          {/* Board path */}
+          {/* Snake-shaped board path */}
           {quests.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {quests.map((quest, i) => (
-                <BoardSquare
-                  key={quest.id}
-                  index={i}
-                  quest={quest}
-                  hasPlayer={position === i}
-                  isLanded={landedIndex === i}
-                  onDelete={() => {
-                    dispatch({ type: 'DELETE_QUEST', payload: { questId: quest.id } });
-                    // Adjust position if needed
-                    if (quests.length > 1 && position >= quests.length - 1) {
-                      dispatch({ type: 'SET_QUEST_BOARD_POSITION', payload: { position: 0 } });
-                    }
-                  }}
-                />
-              ))}
+            <div className="overflow-x-auto pb-2">
+              <div
+                className="grid gap-4 min-w-[600px]"
+                style={{
+                  gridTemplateColumns: 'repeat(5, 1fr)',
+                }}
+              >
+                {quests.map((quest, i) => {
+                  const cols = 5;
+                  const row = Math.floor(i / cols);
+                  const colInRow = i % cols;
+                  const isReversed = row % 2 === 1;
+                  const gridCol = isReversed ? cols - colInRow : colInRow + 1;
+                  const gridRow = row + 1;
+
+                  // Determine connector direction
+                  const isLastInRow = colInRow === cols - 1;
+                  const isFirstInRow = colInRow === 0;
+                  const showDownConnector = (isLastInRow && !isReversed && i + 1 < quests.length) ||
+                                            (isFirstInRow && isReversed && i + 1 < quests.length);
+                  const showRightConnector = !isLastInRow && !isReversed && i + 1 < quests.length;
+                  const showLeftConnector = !isFirstInRow && isReversed && i + 1 < quests.length;
+
+                  return (
+                    <div
+                      key={quest.id}
+                      className="relative"
+                      style={{
+                        gridColumn: gridCol,
+                        gridRow: gridRow,
+                      }}
+                    >
+                      <BoardSquare
+                        index={i}
+                        quest={quest}
+                        hasPlayer={position === i}
+                        isLanded={landedIndex === i}
+                        onDelete={() => {
+                          dispatch({ type: 'DELETE_QUEST', payload: { questId: quest.id } });
+                          if (quests.length > 1 && position >= quests.length - 1) {
+                            dispatch({ type: 'SET_QUEST_BOARD_POSITION', payload: { position: 0 } });
+                          }
+                        }}
+                      />
+                      {/* Right connector (even rows) */}
+                      {showRightConnector && (
+                        <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-border" />
+                      )}
+                      {/* Left connector (odd rows) */}
+                      {showLeftConnector && (
+                        <div className="absolute top-1/2 -left-4 w-4 h-0.5 bg-border" />
+                      )}
+                      {/* Down connector (end of row) */}
+                      {showDownConnector && (
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-0.5 h-4 bg-border" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <div className="mystical-card rounded-xl p-10 glow-border flex flex-col items-center text-center">
