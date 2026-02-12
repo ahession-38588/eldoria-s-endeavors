@@ -19,22 +19,31 @@ export default function QuestBoard() {
   const handleRoll = useCallback((diceValue: number) => {
     if (quests.length === 0) return;
 
-    const newPos = (position + diceValue) % quests.length;
-    dispatch({ type: 'SET_QUEST_BOARD_POSITION', payload: { position: newPos } });
-    setLandedIndex(newPos);
+    // Count steps, skipping completed quests
+    let remaining = diceValue;
+    let cur = position;
+    while (remaining > 0) {
+      cur = (cur + 1) % quests.length;
+      if (!quests[cur].isComplete) {
+        remaining--;
+      }
+      // Safety: if all quests are complete, break to avoid infinite loop
+      if (remaining > 0 && quests.every(q => q.isComplete)) break;
+    }
 
-    const landedQuest = quests[newPos];
+    dispatch({ type: 'SET_QUEST_BOARD_POSITION', payload: { position: cur } });
+    setLandedIndex(cur);
+
+    const landedQuest = quests[cur];
     if (landedQuest && !landedQuest.isComplete) {
-      // Auto-complete the quest you land on
       setTimeout(() => {
         dispatch({ type: 'COMPLETE_QUEST', payload: { questId: landedQuest.id } });
         toast.success(`Quest complete: "${landedQuest.title}" 🎉`);
       }, 600);
-    } else if (landedQuest?.isComplete) {
-      toast('Already completed! Roll again or reset it.', { icon: '🔄' });
+    } else if (quests.every(q => q.isComplete)) {
+      toast('All quests completed! Reset to play again.', { icon: '🏆' });
     }
 
-    // Clear landed highlight after animation
     setTimeout(() => setLandedIndex(null), 2000);
   }, [quests, position, dispatch]);
 
