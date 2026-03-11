@@ -54,7 +54,12 @@ const initialState: AppState = {
   questBoardPosition: 0,
 };
 
-const LINES_PER_TASK = 3;
+const BASE_LINES_PER_TASK = 5;
+
+function getStoryLinesForTask(durationMinutes?: number): number {
+  const bonus = durationMinutes ? Math.floor(durationMinutes / 15) : 0;
+  return BASE_LINES_PER_TASK + bonus;
+}
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -138,9 +143,14 @@ function reducer(state: AppState, action: Action): AppState {
       // Reveal story lines when completing a task
       let updatedStory = state.companionStory;
       if (wasCompleting && updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
+        // Find the completed task to get its duration
+        const completedTask = updatedLists
+          .flatMap(l => l.tasks)
+          .find(t => t.id === action.payload.taskId);
+        const lines = getStoryLinesForTask(completedTask?.duration);
         updatedStory = {
           ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + LINES_PER_TASK, updatedStory.totalLines),
+          revealedLines: Math.min(updatedStory.revealedLines + lines, updatedStory.totalLines),
         };
       }
 
@@ -252,9 +262,13 @@ function reducer(state: AppState, action: Action): AppState {
       // Reveal story lines when completing a focused task
       let updatedStory = state.companionStory;
       if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
+        const completedTask = updatedLists
+          .flatMap(l => l.tasks)
+          .find(t => t.id === taskId);
+        const lines = getStoryLinesForTask(completedTask?.duration);
         updatedStory = {
           ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + LINES_PER_TASK, updatedStory.totalLines),
+          revealedLines: Math.min(updatedStory.revealedLines + lines, updatedStory.totalLines),
         };
       }
       
@@ -377,7 +391,7 @@ function reducer(state: AppState, action: Action): AppState {
       if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
         updatedStory = {
           ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + LINES_PER_TASK, updatedStory.totalLines),
+          revealedLines: Math.min(updatedStory.revealedLines + BASE_LINES_PER_TASK, updatedStory.totalLines),
         };
       }
       return {
