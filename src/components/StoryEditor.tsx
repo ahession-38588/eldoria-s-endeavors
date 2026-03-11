@@ -124,8 +124,31 @@ export function StoryEditor({ initialContent, initialImageUrl, onSave, onClose }
               Story Content
             </label>
             <p className="text-xs text-muted-foreground/60 mb-2">
-              Write your story here. Each line will be revealed gradually as you complete tasks (3 lines per completion).
+              Paste text or import an EPUB file. Each line is revealed gradually as you complete tasks (3 lines per completion).
             </p>
+            <div className="flex gap-2 mb-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isParsingEpub}
+                className="border-border/50 text-muted-foreground hover:text-foreground"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isParsingEpub ? 'Parsing…' : 'Import EPUB'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".epub"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) parseEpub(file);
+                }}
+              />
+            </div>
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
