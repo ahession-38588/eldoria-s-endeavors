@@ -21,10 +21,90 @@ interface StoryEditorProps {
 export function StoryEditor({ initialContent, initialImageUrl, onSave, onClose }: StoryEditorProps) {
   const [content, setContent] = useState(initialContent);
   const [imageUrl, setImageUrl] = useState(initialImageUrl || '');
+  const [isParsingEpub, setIsParsingEpub] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     if (content.trim()) {
       onSave(content.trim(), imageUrl.trim() || undefined);
+    }
+  };
+
+  const parseEpub = async (file: File) => {
+    setIsParsingEpub(true);
+    try {
+      const zip = await JSZip.loadAsync(file);
+      
+      // Find the content.opf to get reading order
+      let opfPath = '';
+      const containerXml = zip.file('META-INF/container.xml');
+      if (containerXml) {
+        const containerText = await containerXml.async('text');
+        const match = containerText.match(/full-path="([^"]+\.opf)"/);
+        if (match) opfPath = match[1];
+      }
+
+      // Get spine order from OPF
+      const orderedFiles: string[] = [];
+      if (opfPath) {
+        const opfFile = zip.file(opfPath);
+        if (opfFile) {
+          const opfText = await opfFile.async('text');
+          const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/') + 1);
+          
+          // Parse manifest items
+          const manifest: Record<string, string> = {};
+          const itemRegex = /<item\s[^>]*id="([^"]*)"[^>]*href="([^"]*)"[^>]*media-type="application\/xhtml\+xml"[^>]*\/?>/g;
+          const itemRegex2 = /<item\s[^>]*href="([^"]*)"[^>]*id="([^"]*)"[^>]*media-type="application\/xhtml\+xml"[^>]*\/?>/g;
+          let m;
+          while ((m = itemRegex.exec(opfText)) !== null) manifest[m[1]] = opfDir + m[2];
+          while ((m = itemRegex2.exec(opfText)) !== null) manifest[m[2]] = opfDir + m[1];
+          
+          // Parse spine order
+          const spineRegex = /<itemref\s[^>]*idref="([^"]*)"/g;
+          while ((m = spineRegex.exec(opfText)) !== null) {
+            if (manifest[m[1]]) orderedFiles.push(manifest[m[1]]);
+          }
+        }
+      }
+
+      // Fallback: grab all xhtml/html files
+      if (orderedFiles.length === 0) {
+        zip.forEach((path) => {
+          if (/\.(xhtml|html|htm)$/i.test(path) && !path.includes('nav') && !path.includes('toc')) {
+            orderedFiles.push(path);
+          }
+        });
+        orderedFiles.sort();
+      }
+
+      // Extract text from each file
+      const textParts: string[] = [];
+      for (const filePath of orderedFiles) {
+        const f = zip.file(filePath);
+        if (f) {
+          const html = await f.async('text');
+          // Strip HTML tags, decode entities, clean whitespace
+          const div = document.createElement('div');
+          div.innerHTML = html.replace(/<(style|script)[^>]*>[\s\S]*?<\/\1>/gi, '');
+          const text = div.textContent || '';
+          const cleaned = text.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
+          if (cleaned) textParts.push(cleaned);
+        }
+      }
+
+      const fullText = textParts.join('\n\n');
+      if (fullText.trim()) {
+        setContent(fullText);
+      } else {
+        throw new Error('No text content found');
+      }
+    } catch (err) {
+      console.error('EPUB parse error:', err);
+      alert('Could not parse EPUB file. Please try pasting text instead.');
+    } finally {
+      setIsParsingEpub(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
