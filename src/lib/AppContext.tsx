@@ -391,7 +391,7 @@ function reducer(state: AppState, action: Action): AppState {
       if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
         updatedStory = {
           ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + LINES_PER_TASK, updatedStory.totalLines),
+          revealedLines: Math.min(updatedStory.revealedLines + BASE_LINES_PER_TASK, updatedStory.totalLines),
         };
       }
       return {
