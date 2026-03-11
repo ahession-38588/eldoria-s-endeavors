@@ -54,7 +54,12 @@ const initialState: AppState = {
   questBoardPosition: 0,
 };
 
-const LINES_PER_TASK = 3;
+const BASE_LINES_PER_TASK = 5;
+
+function getStoryLinesForTask(durationMinutes?: number): number {
+  const bonus = durationMinutes ? Math.floor(durationMinutes / 15) : 0;
+  return BASE_LINES_PER_TASK + bonus;
+}
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
