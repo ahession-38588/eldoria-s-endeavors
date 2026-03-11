@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Image, Save } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Image, Save, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import JSZip from 'jszip';
 
 interface StoryEditorProps {
   initialContent: string;
