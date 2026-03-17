@@ -145,9 +145,11 @@ export function TodoListCard({ list }: TodoListCardProps) {
       {!list.isCollapsed && (
         <div className="p-3 space-y-2 animate-accordion-down min-h-[60px]">
           <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-            {list.tasks.map((task) => (
-              <TaskItem key={task.id} task={task} listId={list.id} />
-            ))}
+            <div className="columns-1 sm:columns-2 gap-2 [&>*]:break-inside-avoid [&>*]:mb-2">
+              {list.tasks.map((task) => (
+                <TaskItem key={task.id} task={task} listId={list.id} />
+              ))}
+            </div>
           </SortableContext>
 
           {list.tasks.length === 0 && (
