@@ -219,11 +219,42 @@ export function ListsArea() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {state.lists.map((list) => (
-                <TodoListCard key={list.id} list={list} />
-              ))}
-            </div>
+            {(() => {
+              const collapsed = state.lists.filter(l => l.isCollapsed);
+              const expanded = state.lists.filter(l => !l.isCollapsed);
+              const expandedCount = expanded.length;
+              const colSpanClass = expandedCount === 1
+                ? 'md:col-span-2 xl:col-span-3'
+                : expandedCount === 2
+                  ? 'xl:col-span-1 md:col-span-1'
+                  : '';
+
+              return (
+                <div className="space-y-4">
+                  {/* Collapsed lists in a compact row */}
+                  {collapsed.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {collapsed.map((list) => (
+                        <div key={list.id} className="min-w-[180px] max-w-[280px] flex-shrink-0">
+                          <TodoListCard list={list} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Expanded lists fill available space */}
+                  {expanded.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {expanded.map((list) => (
+                        <div key={list.id} className={colSpanClass}>
+                          <TodoListCard list={list} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <DragOverlay>
               {activeTask && (

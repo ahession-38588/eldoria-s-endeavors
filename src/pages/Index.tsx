@@ -57,7 +57,7 @@ const Index = () => {
             </div>
 
             {/* Bottom row - Lists */}
-            <div className="min-h-[400px] lg:min-h-[500px] pb-20">
+            <div className="min-h-[400px] lg:min-h-[500px] pb-20 flex-1">
               <ListsArea />
             </div>
           </div>
