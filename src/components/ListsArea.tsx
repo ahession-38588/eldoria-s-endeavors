@@ -223,11 +223,14 @@ export function ListsArea() {
               const collapsed = state.lists.filter(l => l.isCollapsed);
               const expanded = state.lists.filter(l => !l.isCollapsed);
               const expandedCount = expanded.length;
-              const colSpanClass = expandedCount === 1
-                ? 'md:col-span-2 xl:col-span-3'
-                : expandedCount === 2
-                  ? 'xl:col-span-1 md:col-span-1'
-                  : '';
+
+              // Dynamically set grid columns to match expanded count (max 3)
+              const gridCols = Math.min(expandedCount, 3) || 1;
+              const gridStyle = {
+                display: 'grid',
+                gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+                gap: '1rem',
+              };
 
               return (
                 <div className="space-y-4">
@@ -244,11 +247,9 @@ export function ListsArea() {
 
                   {/* Expanded lists fill available space */}
                   {expanded.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <div style={gridStyle}>
                       {expanded.map((list) => (
-                        <div key={list.id} className={colSpanClass}>
-                          <TodoListCard list={list} />
-                        </div>
+                        <TodoListCard key={list.id} list={list} />
                       ))}
                     </div>
                   )}
