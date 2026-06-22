@@ -31,6 +31,10 @@ type Action =
   | { type: 'REMOVE_FROM_FOCUS'; payload: { taskId: string } }
   | { type: 'COMPLETE_FOCUSED_TASK'; payload: { taskId: string } }
   | { type: 'REORDER_TASK'; payload: { listId: string; oldIndex: number; newIndex: number } }
+  | { type: 'ADD_SUBTASK'; payload: { listId: string; taskId: string; text: string } }
+  | { type: 'TOGGLE_SUBTASK'; payload: { listId: string; taskId: string; subtaskId: string } }
+  | { type: 'UPDATE_SUBTASK_TEXT'; payload: { listId: string; taskId: string; subtaskId: string; text: string } }
+  | { type: 'DELETE_SUBTASK'; payload: { listId: string; taskId: string; subtaskId: string } }
   | { type: 'MOVE_TASK_BETWEEN_LISTS'; payload: { fromListId: string; toListId: string; taskId: string; newIndex: number } }
   | { type: 'SET_COMPANION_STORY'; payload: { content: string; imageUrl?: string } }
   | { type: 'CLEAR_COMPANION_STORY' }
