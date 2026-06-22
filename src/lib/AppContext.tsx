@@ -429,6 +429,98 @@ function reducer(state: AppState, action: Action): AppState {
         questBoardPosition: action.payload.position,
       };
 
+    case 'ADD_SUBTASK': {
+      const { listId, taskId, text } = action.payload;
+      return {
+        ...state,
+        lists: state.lists.map(list =>
+          list.id === listId
+            ? {
+                ...list,
+                tasks: list.tasks.map(task =>
+                  task.id === taskId
+                    ? {
+                        ...task,
+                        subtasks: [
+                          ...(task.subtasks || []),
+                          { id: generateId(), text, completed: false, createdAt: Date.now() },
+                        ],
+                      }
+                    : task
+                ),
+              }
+            : list
+        ),
+      };
+    }
+
+    case 'TOGGLE_SUBTASK': {
+      const { listId, taskId, subtaskId } = action.payload;
+      return {
+        ...state,
+        lists: state.lists.map(list =>
+          list.id === listId
+            ? {
+                ...list,
+                tasks: list.tasks.map(task =>
+                  task.id === taskId
+                    ? {
+                        ...task,
+                        subtasks: (task.subtasks || []).map(s =>
+                          s.id === subtaskId ? { ...s, completed: !s.completed } : s
+                        ),
+                      }
+                    : task
+                ),
+              }
+            : list
+        ),
+      };
+    }
+
+    case 'UPDATE_SUBTASK_TEXT': {
+      const { listId, taskId, subtaskId, text } = action.payload;
+      return {
+        ...state,
+        lists: state.lists.map(list =>
+          list.id === listId
+            ? {
+                ...list,
+                tasks: list.tasks.map(task =>
+                  task.id === taskId
+                    ? {
+                        ...task,
+                        subtasks: (task.subtasks || []).map(s =>
+                          s.id === subtaskId ? { ...s, text } : s
+                        ),
+                      }
+                    : task
+                ),
+              }
+            : list
+        ),
+      };
+    }
+
+    case 'DELETE_SUBTASK': {
+      const { listId, taskId, subtaskId } = action.payload;
+      return {
+        ...state,
+        lists: state.lists.map(list =>
+          list.id === listId
+            ? {
+                ...list,
+                tasks: list.tasks.map(task =>
+                  task.id === taskId
+                    ? { ...task, subtasks: (task.subtasks || []).filter(s => s.id !== subtaskId) }
+                    : task
+                ),
+              }
+            : list
+        ),
+      };
+    }
+
     default:
       return state;
   }
