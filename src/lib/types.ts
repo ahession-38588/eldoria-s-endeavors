@@ -6,6 +6,13 @@ export interface StoryContent {
   totalLines: number;
 }
 
+export interface Subtask {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: number;
+}
+
 export interface Task {
   id: string;
   text: string;
@@ -13,6 +20,7 @@ export interface Task {
   createdAt: number;
   duration?: number; // Duration in minutes
   scheduledTime?: string; // ISO string for scheduled start time
+  subtasks?: Subtask[];
 }
 
 export interface TodoList {
