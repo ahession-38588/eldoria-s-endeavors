@@ -17,6 +17,10 @@ export function TaskItem({ task, listId }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(task.text);
   const [justCompleted, setJustCompleted] = useState(false);
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+  const [newSubtaskText, setNewSubtaskText] = useState('');
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [subtaskEditText, setSubtaskEditText] = useState('');
 
   const {
     attributes,
