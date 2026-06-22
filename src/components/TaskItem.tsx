@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Target, Trash2, Edit2, GripVertical } from 'lucide-react';
+import { Check, Target, Trash2, Edit2, GripVertical, Plus, ListPlus, X } from 'lucide-react';
 import { Task } from '@/lib/types';
 import { useApp } from '@/lib/AppContext';
 import { cn } from '@/lib/utils';
