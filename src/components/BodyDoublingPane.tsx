@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Heart, Sparkles, Edit2, Trash2, BookOpen, ArrowLeft, Users } from 'lucide-react';
+import { Heart, Sparkles, Edit2, Trash2, BookOpen, ArrowLeft, Users, Gift } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { cn } from '@/lib/utils';
 import { LofiCompanion, CompanionMood } from './LofiCompanion';
