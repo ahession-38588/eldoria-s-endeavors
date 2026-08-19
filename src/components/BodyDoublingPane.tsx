@@ -146,6 +146,21 @@ export function BodyDoublingPane() {
           {hasStory && (
             <>
               <button
+                onClick={handleToggleSaveForLater}
+                className={cn(
+                  "p-1.5 rounded-md transition-all",
+                  story?.saveForLater
+                    ? "text-glow-gold bg-glow-gold/20"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/20"
+                )}
+                title={story?.saveForLater
+                  ? "Saving rewards for later — click to reveal instantly"
+                  : "Save rewards for later instead of revealing instantly"}
+              >
+                <Gift className="w-4 h-4" />
+              </button>
+              <button
+
                 onClick={() => setShowStoryEditor(true)}
                 className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/20 transition-all"
                 title="Edit story"
