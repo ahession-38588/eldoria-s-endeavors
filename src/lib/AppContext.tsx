@@ -159,17 +159,13 @@ function reducer(state: AppState, action: Action): AppState {
 
       // Reveal story lines when completing a task
       let updatedStory = state.companionStory;
-      if (wasCompleting && updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
-        // Find the completed task to get its duration
+      if (wasCompleting) {
         const completedTask = updatedLists
           .flatMap(l => l.tasks)
           .find(t => t.id === action.payload.taskId);
-        const lines = getStoryLinesForTask(completedTask?.duration);
-        updatedStory = {
-          ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + lines, updatedStory.totalLines),
-        };
+        updatedStory = grantStoryLines(updatedStory, getStoryLinesForTask(completedTask?.duration));
       }
+
 
       return { ...state, lists: updatedLists, companionStory: updatedStory };
     }
