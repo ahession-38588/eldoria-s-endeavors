@@ -36,11 +36,17 @@ export const getStoredData = (): AppData => {
           }),
         }));
       }
-      // Migration: ensure companionStory has lastReadLine
+      // Migration: ensure companionStory has lastReadLine and banked-reward fields
       let companionStory = data.companionStory || null;
-      if (companionStory && companionStory.lastReadLine === undefined) {
-        companionStory = { ...companionStory, lastReadLine: 0 };
+      if (companionStory) {
+        companionStory = {
+          ...companionStory,
+          lastReadLine: companionStory.lastReadLine ?? 0,
+          bankedLines: companionStory.bankedLines ?? 0,
+          saveForLater: companionStory.saveForLater ?? false,
+        };
       }
+
       
       return {
         lists: data.lists || [],
@@ -96,4 +102,7 @@ export const createCompanionStory = (content: string, imageUrl?: string): Compan
   totalLines: content.split('\n').filter(line => line.trim()).length,
   revealedLines: 0,
   lastReadLine: 0,
+  bankedLines: 0,
+  saveForLater: false,
 });
+

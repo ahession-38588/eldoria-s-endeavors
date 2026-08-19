@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Heart, Sparkles, Edit2, Trash2, BookOpen, ArrowLeft, Users } from 'lucide-react';
+import { Heart, Sparkles, Edit2, Trash2, BookOpen, ArrowLeft, Users, Gift } from 'lucide-react';
 import { useApp } from '@/lib/AppContext';
 import { cn } from '@/lib/utils';
 import { LofiCompanion, CompanionMood } from './LofiCompanion';
@@ -94,9 +94,21 @@ export function BodyDoublingPane() {
     setViewMode('animation');
   };
 
+  const handleClaimBanked = () => {
+    dispatch({ type: 'CLAIM_BANKED_STORY_LINES' });
+    setViewMode('story');
+  };
+
+  const handleToggleSaveForLater = () => {
+    if (!story) return;
+    dispatch({ type: 'SET_STORY_SAVE_FOR_LATER', payload: { saveForLater: !story.saveForLater } });
+  };
+
   const visibleLines = getVisibleLines();
+  const bankedLines = story?.bankedLines ?? 0;
   const remainingLines = story ? story.totalLines - story.revealedLines : 0;
   const unreadLines = story ? story.revealedLines - story.lastReadLine : 0;
+
 
   return (
     <div className="h-full flex flex-col mystical-card rounded-xl p-5 glow-border starfield overflow-hidden">
@@ -134,6 +146,21 @@ export function BodyDoublingPane() {
           {hasStory && (
             <>
               <button
+                onClick={handleToggleSaveForLater}
+                className={cn(
+                  "p-1.5 rounded-md transition-all",
+                  story?.saveForLater
+                    ? "text-glow-gold bg-glow-gold/20"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/20"
+                )}
+                title={story?.saveForLater
+                  ? "Saving rewards for later — click to reveal instantly"
+                  : "Save rewards for later instead of revealing instantly"}
+              >
+                <Gift className="w-4 h-4" />
+              </button>
+              <button
+
                 onClick={() => setShowStoryEditor(true)}
                 className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/20 transition-all"
                 title="Edit story"
@@ -198,6 +225,25 @@ export function BodyDoublingPane() {
                 </p>
               </div>
             )}
+
+            {hasStory && bankedLines > 0 && (
+              <div className="mt-4 text-center px-4">
+                <p className="text-xs text-glow-gold/80 mb-2 flex items-center justify-center gap-1">
+                  <Gift className="w-3 h-3" />
+                  {bankedLines} {bankedLines === 1 ? 'line' : 'lines'} saved for later
+                </p>
+                <Button
+                  onClick={handleClaimBanked}
+                  variant="outline"
+                  size="sm"
+                  className="border-glow-gold/30 text-glow-gold hover:bg-glow-gold/10"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Claim reward
+                </Button>
+              </div>
+            )}
+
           </div>
         ) : (
           // Story View

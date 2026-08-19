@@ -40,6 +40,9 @@ type Action =
   | { type: 'CLEAR_COMPANION_STORY' }
   | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } }
   | { type: 'MARK_STORY_READ' }
+  | { type: 'SET_STORY_SAVE_FOR_LATER'; payload: { saveForLater: boolean } }
+  | { type: 'CLAIM_BANKED_STORY_LINES'; payload?: { lines?: number } }
+
   | { type: 'SET_COMPANION_TYPE'; payload: { companionType: CompanionType } }
   | { type: 'UPDATE_SCHEDULE_SETTINGS'; payload: ScheduleSettings }
   | { type: 'ADD_QUEST'; payload: { title: string; description?: string; category: QuestCategory } }
@@ -64,6 +67,19 @@ function getStoryLinesForTask(durationMinutes?: number): number {
   const bonus = durationMinutes ? Math.floor(durationMinutes / 15) : 0;
   return BASE_LINES_PER_TASK + bonus;
 }
+
+/** Applies an earned reward: reveals it now, or banks it when "save for later" is on. */
+function grantStoryLines(story: CompanionStory | null, lines: number): CompanionStory | null {
+  if (!story) return story;
+  const remaining = story.totalLines - story.revealedLines - (story.bankedLines ?? 0);
+  if (remaining <= 0) return story;
+  const earned = Math.min(lines, remaining);
+  if (story.saveForLater) {
+    return { ...story, bankedLines: (story.bankedLines ?? 0) + earned };
+  }
+  return { ...story, revealedLines: story.revealedLines + earned };
+}
+
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -146,17 +162,13 @@ function reducer(state: AppState, action: Action): AppState {
 
       // Reveal story lines when completing a task
       let updatedStory = state.companionStory;
-      if (wasCompleting && updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
-        // Find the completed task to get its duration
+      if (wasCompleting) {
         const completedTask = updatedLists
           .flatMap(l => l.tasks)
           .find(t => t.id === action.payload.taskId);
-        const lines = getStoryLinesForTask(completedTask?.duration);
-        updatedStory = {
-          ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + lines, updatedStory.totalLines),
-        };
+        updatedStory = grantStoryLines(updatedStory, getStoryLinesForTask(completedTask?.duration));
       }
+
 
       return { ...state, lists: updatedLists, companionStory: updatedStory };
     }
@@ -264,17 +276,12 @@ function reducer(state: AppState, action: Action): AppState {
       });
 
       // Reveal story lines when completing a focused task
-      let updatedStory = state.companionStory;
-      if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
-        const completedTask = updatedLists
-          .flatMap(l => l.tasks)
-          .find(t => t.id === taskId);
-        const lines = getStoryLinesForTask(completedTask?.duration);
-        updatedStory = {
-          ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + lines, updatedStory.totalLines),
-        };
-      }
+      const completedTask = updatedLists.flatMap(l => l.tasks).find(t => t.id === taskId);
+      const updatedStory = grantStoryLines(
+        state.companionStory,
+        getStoryLinesForTask(completedTask?.duration)
+      );
+
       
       return {
         ...state,
@@ -364,6 +371,32 @@ function reducer(state: AppState, action: Action): AppState {
         },
       };
 
+    case 'SET_STORY_SAVE_FOR_LATER':
+      if (!state.companionStory) return state;
+      return {
+        ...state,
+        companionStory: {
+          ...state.companionStory,
+          saveForLater: action.payload.saveForLater,
+        },
+      };
+
+    case 'CLAIM_BANKED_STORY_LINES': {
+      const story = state.companionStory;
+      if (!story || (story.bankedLines ?? 0) <= 0) return state;
+      const claim = Math.min(action.payload?.lines ?? story.bankedLines, story.bankedLines);
+      return {
+        ...state,
+        companionStory: {
+          ...story,
+          revealedLines: Math.min(story.revealedLines + claim, story.totalLines),
+          bankedLines: story.bankedLines - claim,
+        },
+      };
+    }
+
+
+
     case 'SET_COMPANION_TYPE':
       return {
         ...state,
@@ -391,13 +424,8 @@ function reducer(state: AppState, action: Action): AppState {
       };
 
     case 'COMPLETE_QUEST': {
-      let updatedStory = state.companionStory;
-      if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
-        updatedStory = {
-          ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + BASE_LINES_PER_TASK, updatedStory.totalLines),
-        };
-      }
+      const updatedStory = grantStoryLines(state.companionStory, BASE_LINES_PER_TASK);
+
       return {
         ...state,
         quests: state.quests.map(q =>
