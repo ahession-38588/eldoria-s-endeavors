@@ -371,6 +371,32 @@ function reducer(state: AppState, action: Action): AppState {
         },
       };
 
+    case 'SET_STORY_SAVE_FOR_LATER':
+      if (!state.companionStory) return state;
+      return {
+        ...state,
+        companionStory: {
+          ...state.companionStory,
+          saveForLater: action.payload.saveForLater,
+        },
+      };
+
+    case 'CLAIM_BANKED_STORY_LINES': {
+      const story = state.companionStory;
+      if (!story || (story.bankedLines ?? 0) <= 0) return state;
+      const claim = Math.min(action.payload?.lines ?? story.bankedLines, story.bankedLines);
+      return {
+        ...state,
+        companionStory: {
+          ...story,
+          revealedLines: Math.min(story.revealedLines + claim, story.totalLines),
+          bankedLines: story.bankedLines - claim,
+        },
+      };
+    }
+
+
+
     case 'SET_COMPANION_TYPE':
       return {
         ...state,
