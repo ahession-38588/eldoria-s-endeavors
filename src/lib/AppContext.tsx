@@ -65,6 +65,19 @@ function getStoryLinesForTask(durationMinutes?: number): number {
   return BASE_LINES_PER_TASK + bonus;
 }
 
+/** Applies an earned reward: reveals it now, or banks it when "save for later" is on. */
+function grantStoryLines(story: CompanionStory | null, lines: number): CompanionStory | null {
+  if (!story) return story;
+  const remaining = story.totalLines - story.revealedLines - (story.bankedLines ?? 0);
+  if (remaining <= 0) return story;
+  const earned = Math.min(lines, remaining);
+  if (story.saveForLater) {
+    return { ...story, bankedLines: (story.bankedLines ?? 0) + earned };
+  }
+  return { ...story, revealedLines: story.revealedLines + earned };
+}
+
+
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'LOAD_DATA':
