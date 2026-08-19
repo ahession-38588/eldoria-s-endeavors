@@ -96,4 +96,7 @@ export const createCompanionStory = (content: string, imageUrl?: string): Compan
   totalLines: content.split('\n').filter(line => line.trim()).length,
   revealedLines: 0,
   lastReadLine: 0,
+  bankedLines: 0,
+  saveForLater: false,
 });
+
