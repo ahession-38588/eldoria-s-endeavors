@@ -404,13 +404,8 @@ function reducer(state: AppState, action: Action): AppState {
       };
 
     case 'COMPLETE_QUEST': {
-      let updatedStory = state.companionStory;
-      if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
-        updatedStory = {
-          ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + BASE_LINES_PER_TASK, updatedStory.totalLines),
-        };
-      }
+      const updatedStory = grantStoryLines(state.companionStory, BASE_LINES_PER_TASK);
+
       return {
         ...state,
         quests: state.quests.map(q =>
