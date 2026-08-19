@@ -37,7 +37,10 @@ export interface CompanionStory {
   totalLines: number;
   revealedLines: number;
   lastReadLine: number; // Track which lines user has read
+  bankedLines: number; // Earned but not yet revealed ("saved for later")
+  saveForLater: boolean; // When true, rewards are banked instead of revealed
 }
+
 
 export type QuestCategory = 'fitness' | 'cleaning' | 'study' | 'craft' | 'social' | 'other';
 
