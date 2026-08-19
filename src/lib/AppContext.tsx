@@ -277,17 +277,12 @@ function reducer(state: AppState, action: Action): AppState {
       });
 
       // Reveal story lines when completing a focused task
-      let updatedStory = state.companionStory;
-      if (updatedStory && updatedStory.revealedLines < updatedStory.totalLines) {
-        const completedTask = updatedLists
-          .flatMap(l => l.tasks)
-          .find(t => t.id === taskId);
-        const lines = getStoryLinesForTask(completedTask?.duration);
-        updatedStory = {
-          ...updatedStory,
-          revealedLines: Math.min(updatedStory.revealedLines + lines, updatedStory.totalLines),
-        };
-      }
+      const completedTask = updatedLists.flatMap(l => l.tasks).find(t => t.id === taskId);
+      const updatedStory = grantStoryLines(
+        state.companionStory,
+        getStoryLinesForTask(completedTask?.duration)
+      );
+
       
       return {
         ...state,
