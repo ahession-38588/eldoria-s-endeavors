@@ -94,9 +94,21 @@ export function BodyDoublingPane() {
     setViewMode('animation');
   };
 
+  const handleClaimBanked = () => {
+    dispatch({ type: 'CLAIM_BANKED_STORY_LINES' });
+    setViewMode('story');
+  };
+
+  const handleToggleSaveForLater = () => {
+    if (!story) return;
+    dispatch({ type: 'SET_STORY_SAVE_FOR_LATER', payload: { saveForLater: !story.saveForLater } });
+  };
+
   const visibleLines = getVisibleLines();
+  const bankedLines = story?.bankedLines ?? 0;
   const remainingLines = story ? story.totalLines - story.revealedLines : 0;
   const unreadLines = story ? story.revealedLines - story.lastReadLine : 0;
+
 
   return (
     <div className="h-full flex flex-col mystical-card rounded-xl p-5 glow-border starfield overflow-hidden">
