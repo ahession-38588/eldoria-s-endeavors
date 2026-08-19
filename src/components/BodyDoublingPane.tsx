@@ -198,6 +198,25 @@ export function BodyDoublingPane() {
                 </p>
               </div>
             )}
+
+            {hasStory && bankedLines > 0 && (
+              <div className="mt-4 text-center px-4">
+                <p className="text-xs text-glow-gold/80 mb-2 flex items-center justify-center gap-1">
+                  <Gift className="w-3 h-3" />
+                  {bankedLines} {bankedLines === 1 ? 'line' : 'lines'} saved for later
+                </p>
+                <Button
+                  onClick={handleClaimBanked}
+                  variant="outline"
+                  size="sm"
+                  className="border-glow-gold/30 text-glow-gold hover:bg-glow-gold/10"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Claim reward
+                </Button>
+              </div>
+            )}
+
           </div>
         ) : (
           // Story View
