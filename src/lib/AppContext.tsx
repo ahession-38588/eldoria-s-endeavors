@@ -40,6 +40,9 @@ type Action =
   | { type: 'CLEAR_COMPANION_STORY' }
   | { type: 'REVEAL_COMPANION_STORY_LINES'; payload: { lines: number } }
   | { type: 'MARK_STORY_READ' }
+  | { type: 'SET_STORY_SAVE_FOR_LATER'; payload: { saveForLater: boolean } }
+  | { type: 'CLAIM_BANKED_STORY_LINES'; payload?: { lines?: number } }
+
   | { type: 'SET_COMPANION_TYPE'; payload: { companionType: CompanionType } }
   | { type: 'UPDATE_SCHEDULE_SETTINGS'; payload: ScheduleSettings }
   | { type: 'ADD_QUEST'; payload: { title: string; description?: string; category: QuestCategory } }
