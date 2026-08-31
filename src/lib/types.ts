@@ -1,5 +1,29 @@
 export type CompanionType = 'scholar' | 'cat' | 'robot' | 'spirit';
 
+export type CalendarProvider = 'google' | 'outlook' | 'icloud' | 'other';
+
+export interface CalendarFeed {
+  id: string;
+  name: string;
+  provider: CalendarProvider;
+  url?: string; // absent for one-off file imports
+  lastSyncedAt?: number;
+  color?: string;
+  enabled: boolean;
+  createdAt: number;
+}
+
+export interface CalendarEvent {
+  id: string;
+  feedId: string;
+  title: string;
+  start: string; // ISO string
+  durationMinutes: number;
+  allDay: boolean;
+  location?: string;
+}
+
+
 export interface StoryContent {
   content: string;
   imageUrl?: string;
