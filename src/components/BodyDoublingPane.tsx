@@ -74,10 +74,40 @@ export function BodyDoublingPane() {
     }
   }, [hasUnreadContent, story?.revealedLines]);
 
-  const getVisibleLines = () => {
-    if (!story) return [];
-    return story.content.split('\n').filter(line => line.trim()).slice(0, story.revealedLines);
+  const parseParagraphs = (content: string): string[][] => {
+    return content
+      .split(/\n\s*\n/)
+      .map(p => p.split('\n').filter(line => line.trim()))
+      .filter(p => p.length > 0);
   };
+
+  const getParagraphIndexForLine = (paragraphs: string[][], lineIndex: number): number => {
+    let count = 0;
+    for (let i = 0; i < paragraphs.length; i++) {
+      if (lineIndex < count + paragraphs[i].length) return i;
+      count += paragraphs[i].length;
+    }
+    return paragraphs.length - 1;
+  };
+
+  const storyParagraphs = useMemo(() => {
+    if (!story) return [] as string[][];
+    return parseParagraphs(story.content);
+  }, [story?.content]);
+
+  const visibleParagraphs = useMemo(() => {
+    if (!story || storyParagraphs.length === 0) return { paragraphs: [] as string[][], startIndex: 0 };
+    if (!hasUnreadContent) {
+      const endPara = getParagraphIndexForLine(storyParagraphs, story.revealedLines - 1);
+      return { paragraphs: storyParagraphs.slice(0, endPara + 1), startIndex: 0 };
+    }
+    const firstNewLine = story.lastReadLine;
+    const lastNewLine = story.revealedLines - 1;
+    const startPara = getParagraphIndexForLine(storyParagraphs, firstNewLine);
+    const endPara = getParagraphIndexForLine(storyParagraphs, lastNewLine);
+    const startIndex = Math.max(0, startPara - 1);
+    return { paragraphs: storyParagraphs.slice(startIndex, endPara + 1), startIndex };
+  }, [story, storyParagraphs, hasUnreadContent]);
 
   const handleSaveStory = (content: string, imageUrl?: string) => {
     dispatch({ type: 'SET_COMPANION_STORY', payload: { content, imageUrl } });
@@ -104,7 +134,7 @@ export function BodyDoublingPane() {
     dispatch({ type: 'SET_STORY_SAVE_FOR_LATER', payload: { saveForLater: !story.saveForLater } });
   };
 
-  const visibleLines = getVisibleLines();
+  const { paragraphs: visibleParagraphsList, startIndex: visibleStartIndex } = visibleParagraphs;
   const bankedLines = story?.bankedLines ?? 0;
   const remainingLines = story ? story.totalLines - story.revealedLines : 0;
   const unreadLines = story ? story.revealedLines - story.lastReadLine : 0;
