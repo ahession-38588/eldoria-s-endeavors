@@ -1,6 +1,6 @@
 /* AppContext - global state */
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory } from './types';
+import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory, CalendarFeed, CalendarEvent, CalendarProvider } from './types';
 import { 
   getStoredData, 
   saveData, 
@@ -49,7 +49,11 @@ type Action =
   | { type: 'COMPLETE_QUEST'; payload: { questId: string } }
   | { type: 'RESET_QUEST'; payload: { questId: string } }
   | { type: 'DELETE_QUEST'; payload: { questId: string } }
-  | { type: 'SET_QUEST_BOARD_POSITION'; payload: { position: number } };
+  | { type: 'SET_QUEST_BOARD_POSITION'; payload: { position: number } }
+  | { type: 'ADD_CALENDAR_FEED'; payload: { name: string; provider: CalendarProvider; url?: string } }
+  | { type: 'REMOVE_CALENDAR_FEED'; payload: { feedId: string } }
+  | { type: 'TOGGLE_CALENDAR_FEED'; payload: { feedId: string } }
+  | { type: 'SET_CALENDAR_EVENTS'; payload: { feedId: string; events: CalendarEvent[] } };
 
 const initialState: AppState = {
   lists: [],
@@ -59,6 +63,8 @@ const initialState: AppState = {
   scheduleSettings: { startTime: '09:00', endTime: '17:00' },
   quests: [],
   questBoardPosition: 0,
+  calendarFeeds: [],
+  calendarEvents: [],
 };
 
 const BASE_LINES_PER_TASK = 5;
@@ -449,6 +455,45 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         quests: state.quests.filter(q => q.id !== action.payload.questId),
+      };
+
+    case 'ADD_CALENDAR_FEED': {
+      const feed: CalendarFeed = {
+        id: generateId(),
+        name: action.payload.name,
+        provider: action.payload.provider,
+        url: action.payload.url,
+        enabled: true,
+        createdAt: Date.now(),
+      };
+      return { ...state, calendarFeeds: [...(state.calendarFeeds || []), feed] };
+    }
+
+    case 'REMOVE_CALENDAR_FEED':
+      return {
+        ...state,
+        calendarFeeds: (state.calendarFeeds || []).filter(f => f.id !== action.payload.feedId),
+        calendarEvents: (state.calendarEvents || []).filter(e => e.feedId !== action.payload.feedId),
+      };
+
+    case 'TOGGLE_CALENDAR_FEED':
+      return {
+        ...state,
+        calendarFeeds: (state.calendarFeeds || []).map(f =>
+          f.id === action.payload.feedId ? { ...f, enabled: !f.enabled } : f
+        ),
+      };
+
+    case 'SET_CALENDAR_EVENTS':
+      return {
+        ...state,
+        calendarFeeds: (state.calendarFeeds || []).map(f =>
+          f.id === action.payload.feedId ? { ...f, lastSyncedAt: Date.now() } : f
+        ),
+        calendarEvents: [
+          ...(state.calendarEvents || []).filter(e => e.feedId !== action.payload.feedId),
+          ...action.payload.events,
+        ],
       };
 
     case 'SET_QUEST_BOARD_POSITION':
