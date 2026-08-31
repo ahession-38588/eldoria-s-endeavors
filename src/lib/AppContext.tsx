@@ -50,7 +50,7 @@ type Action =
   | { type: 'RESET_QUEST'; payload: { questId: string } }
   | { type: 'DELETE_QUEST'; payload: { questId: string } }
   | { type: 'SET_QUEST_BOARD_POSITION'; payload: { position: number } }
-  | { type: 'ADD_CALENDAR_FEED'; payload: { name: string; provider: CalendarProvider; url?: string } }
+  | { type: 'ADD_CALENDAR_FEED'; payload: { id?: string; name: string; provider: CalendarProvider; url?: string } }
   | { type: 'REMOVE_CALENDAR_FEED'; payload: { feedId: string } }
   | { type: 'TOGGLE_CALENDAR_FEED'; payload: { feedId: string } }
   | { type: 'SET_CALENDAR_EVENTS'; payload: { feedId: string; events: CalendarEvent[] } };
@@ -459,7 +459,7 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'ADD_CALENDAR_FEED': {
       const feed: CalendarFeed = {
-        id: generateId(),
+        id: action.payload.id || generateId(),
         name: action.payload.name,
         provider: action.payload.provider,
         url: action.payload.url,

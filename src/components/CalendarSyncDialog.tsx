@@ -61,14 +61,8 @@ export function CalendarSyncDialog() {
       const text = await fetchIcsText(url);
       const feedName = name.trim() || PROVIDERS.find(p => p.value === provider)!.label + ' Calendar';
       const feedId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-      dispatch({ type: 'ADD_CALENDAR_FEED', payload: { name: feedName, provider, url: url.trim() } });
-      // The reducer generates its own id, so re-sync via the newest feed after state settles.
+      dispatch({ type: 'ADD_CALENDAR_FEED', payload: { id: feedId, name: feedName, provider, url: url.trim() } });
       const count = importIcsText(feedId, text);
-      // Re-key the events onto the feed the reducer created.
-      setTimeout(() => {
-        const created = (state.calendarFeeds || []);
-        void created;
-      }, 0);
       toast.success(`Synced ${count} event${count === 1 ? '' : 's'}`);
       setName('');
       setUrl('');
@@ -102,7 +96,7 @@ export function CalendarSyncDialog() {
       const feedId = `file-${Date.now()}`;
       dispatch({
         type: 'ADD_CALENDAR_FEED',
-        payload: { name: file.name.replace(/\.ics$/i, '') || 'Imported calendar', provider: 'other' },
+        payload: { id: feedId, name: file.name.replace(/\.ics$/i, '') || 'Imported calendar', provider: 'other' },
       });
       const count = importIcsText(feedId, text);
       toast.success(`Imported ${count} event${count === 1 ? '' : 's'}`);
