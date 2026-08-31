@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Task } from '@/lib/types';
 import { toast } from 'sonner';
+import { CalendarSyncDialog } from './CalendarSyncDialog';
+import { CalendarDays } from 'lucide-react';
 
 const SLOT_HEIGHT = 48; // Height in pixels for 15 minutes
 const MINUTES_PER_SLOT = 15;
@@ -134,6 +136,30 @@ export function FocusPane() {
     }
     return false;
   }, [focusedTasks, startTime, endTime]);
+
+  // Calendar events for today, positioned on the timeline
+  const calendarBlocks = useMemo(() => {
+    const enabledFeeds = new Set((state.calendarFeeds || []).filter(f => f.enabled).map(f => f.id));
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
+    const today = format(new Date(), 'yyyy-MM-dd');
+
+    return (state.calendarEvents || [])
+      .filter(ev => enabledFeeds.has(ev.feedId))
+      .filter(ev => format(new Date(ev.start), 'yyyy-MM-dd') === today)
+      .map(ev => {
+        const evDate = new Date(ev.start);
+        const evStart = ev.allDay ? startMinutes : evDate.getHours() * 60 + evDate.getMinutes();
+        const duration = ev.allDay ? Math.max(15, endMinutes - startMinutes) : ev.durationMinutes;
+        return {
+          event: ev,
+          top: ((evStart - startMinutes) / MINUTES_PER_SLOT) * SLOT_HEIGHT,
+          height: (duration / MINUTES_PER_SLOT) * SLOT_HEIGHT,
+          visible: evStart + duration > startMinutes && evStart < endMinutes,
+        };
+      })
+      .filter(b => b.visible);
+  }, [state.calendarEvents, state.calendarFeeds, startTime, endTime]);
 
   // Unscheduled focused tasks
   const unscheduledTasks = focusedTasks.filter(({ task }) => !task.scheduledTime);
@@ -275,6 +301,7 @@ export function FocusPane() {
           </div>
           <h2 className="font-display text-xl text-foreground glow-text">Focus Pane</h2>
         </div>
+        <CalendarSyncDialog />
       </div>
 
       {/* Time Range Selector */}
@@ -375,6 +402,28 @@ export function FocusPane() {
                 </div>
               );
             })}
+
+            {/* Calendar events layer (behind tasks) */}
+            <div className="absolute inset-0 left-16 pointer-events-none">
+              {calendarBlocks.map(({ event, top, height }) => (
+                <div
+                  key={event.id}
+                  className="absolute left-1 right-1 rounded-lg px-2 py-1 border border-dashed border-accent/50 bg-accent/10"
+                  style={{ top: `${top}px`, height: `${Math.max(height - 4, 24)}px` }}
+                  title={event.location ? `${event.title} — ${event.location}` : event.title}
+                >
+                  <div className="flex items-center gap-1 min-w-0">
+                    <CalendarDays className="w-3 h-3 text-accent-foreground/70 shrink-0" />
+                    <span className="text-xs text-muted-foreground truncate">{event.title}</span>
+                  </div>
+                  {height > 40 && !event.allDay && (
+                    <p className="text-[10px] text-muted-foreground/80">
+                      {format(new Date(event.start), 'h:mm a')}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
 
             {/* Scheduled tasks overlay */}
             <div className="absolute inset-0 left-16 pointer-events-none">
