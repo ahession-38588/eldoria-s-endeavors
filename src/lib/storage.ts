@@ -1,4 +1,4 @@
-import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory } from './types';
+import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory, CalendarFeed, CalendarEvent } from './types';
 
 const STORAGE_KEY = 'fantasy-todo-data';
 
@@ -15,6 +15,8 @@ export interface AppData {
   scheduleSettings?: ScheduleSettings;
   quests: Quest[];
   questBoardPosition: number;
+  calendarFeeds: CalendarFeed[];
+  calendarEvents: CalendarEvent[];
 }
 
 export const generateId = (): string => {
@@ -56,6 +58,8 @@ export const getStoredData = (): AppData => {
         scheduleSettings: data.scheduleSettings || { startTime: '09:00', endTime: '17:00' },
         quests: data.quests || [],
         questBoardPosition: data.questBoardPosition || 0,
+        calendarFeeds: data.calendarFeeds || [],
+        calendarEvents: data.calendarEvents || [],
       };
     }
   } catch (error) {
@@ -69,6 +73,8 @@ export const getStoredData = (): AppData => {
     scheduleSettings: { startTime: '09:00', endTime: '17:00' },
     quests: [],
     questBoardPosition: 0,
+    calendarFeeds: [],
+    calendarEvents: [],
   };
 };
 
