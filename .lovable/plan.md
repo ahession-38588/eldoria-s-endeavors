@@ -1,36 +1,24 @@
+# Turn the app into your full diary (schedule + calendar)
 
+## What you'll get
+- **Accounts**: sign in (email or Google) so your diary, tasks, lists, story progress and companion follow you to any device.
+- **Diary views**: Day (current timeline), Week and Month, with arrows to move into the past or future and a "Today" button.
+- **Plan any date**: give tasks a date and time, drag them onto any day in Week view, see past days with what you finished.
+- **Two-way Google Calendar**: connect your own Google account; your events appear in all views, and you can create, move, edit and delete events from the app — changes show in Google Calendar too.
+- Existing link-based (.ics) feeds stay as read-only extras (e.g. Outlook/iCloud).
+- Your current saved data on this computer is copied into your account the first time you sign in.
 
-# Snake-Shaped Board Path
-
-## What changes
-Replace the current flat grid layout with a snake/serpentine path where:
-- Rows alternate direction (left-to-right, then right-to-left, then left-to-right...)
-- This creates the classic board game winding path feel, like Snakes & Ladders or Monopoly edges
-- Optional: add connector lines between squares to visualize the path
-
-## How it works
-
-Using a fixed number of columns (e.g. 5 on desktop, 3 on mobile), the quests are laid out row by row. Even rows go left-to-right, odd rows go right-to-left. CSS Grid with explicit `order` styling on each square handles the reversal.
-
-```text
-Row 0:  [1] [2] [3] [4] [5]
-                            |
-Row 1:  [10] [9] [8] [7] [6]
-        |
-Row 2:  [11] [12] [13] [14] [15]
-```
+## Steps
+1. Enable Lovable Cloud; add sign-in page and account menu.
+2. Move saved data from this device into your account (tasks, lists, story, settings), keeping it working offline-first.
+3. Add a date to tasks and a Day / Week / Month switcher with date navigation in the Focus area.
+4. Connect Google Calendar per user (each person links their own account), list calendars, show events.
+5. Create/edit/move/delete Google events from the timeline and week/month grid.
+6. Polish in the existing mystical teal style; keep collapsible sections, no drag-to-resize.
 
 ## Technical details
-
-**File: `src/pages/QuestBoard.tsx`**
-- Replace the simple grid with a snake-layout grid
-- Compute each quest's grid column based on its index and which row it falls in
-- Even rows: columns 1-5 normally; odd rows: columns reversed (5 down to 1)
-- Use CSS Grid with `grid-column` and `grid-row` on each square
-- Add small SVG/CSS connector lines between adjacent squares to show the path direction
-
-**File: `src/components/quest-board/BoardSquare.tsx`**
-- No major changes needed; may add a small visual connector arrow/line prop
-
-The columns will be responsive: 5 columns on large screens, 4 on medium, 3 on small, 2 on mobile -- with the snake logic adapting to whichever column count is active. To keep it simple and reliable, we'll use a fixed 5-column layout inside a horizontally scrollable container on small screens, ensuring the snake path always looks correct.
-
+- Lovable Cloud: auth + tables `profiles`, `app_state` (JSON per user, RLS owner-only) to start, so the existing Context/reducer stays intact; localStorage remains a cache.
+- Task type gains `scheduledDate` (YYYY-MM-DD); migration defaults existing scheduled tasks to today.
+- Google Calendar via App User Connector `google_calendar` (scope `calendar.events` + `calendar.readonly`), edge functions: oauth-start, oauth-complete, list-events (range), upsert-event, delete-event, disconnect. Encrypted `app_user_connections` table, service-role only.
+- Requires a workspace Google OAuth client configured for App User Connectors (you'll get a setup card).
+- New views: `WeekView`, `MonthView` components; FocusPane gets a view switcher and selected-date state.
