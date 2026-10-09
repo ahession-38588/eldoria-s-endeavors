@@ -300,22 +300,39 @@ export function BodyDoublingPane() {
 
             {/* Story content */}
             <div className="flex-1 overflow-y-auto bg-void/30 rounded-lg p-3 border border-border/30 min-h-0">
-              <div className="space-y-2">
-                {visibleLines.map((line, idx) => (
-                  <p
-                    key={idx}
-                    className={cn(
-                      "text-sm leading-relaxed story-reveal",
-                      idx >= (story?.lastReadLine || 0)
-                        ? "text-foreground"
-                        : "text-foreground/70"
-                    )}
-                    style={{ animationDelay: `${idx * 0.05}s` }}
-                  >
-                    {line}
-                  </p>
-                ))}
+              <div className="space-y-4">
+                {visibleParagraphsList.map((paragraph, pIdx) => {
+                  const actualParaIndex = visibleStartIndex + pIdx;
+                  const linesBefore = storyParagraphs
+                    .slice(0, actualParaIndex)
+                    .reduce((sum, p) => sum + p.length, 0);
+                  return (
+                    <div key={actualParaIndex} className="space-y-2">
+                      {paragraph.map((line, lIdx) => {
+                        const globalLineIndex = linesBefore + lIdx;
+                        const isNew = hasUnreadContent &&
+                          globalLineIndex >= (story?.lastReadLine || 0) &&
+                          globalLineIndex < (story?.revealedLines || 0);
+                        return (
+                          <p
+                            key={`${actualParaIndex}-${lIdx}`}
+                            className={cn(
+                              "text-sm leading-relaxed story-reveal",
+                              isNew
+                                ? "text-foreground"
+                                : "text-foreground/70"
+                            )}
+                            style={{ animationDelay: `${globalLineIndex * 0.05}s` }}
+                          >
+                            {line}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
+
 
               {remainingLines > 0 && (
                 <div className="mt-4 pt-3 border-t border-border/30 text-center">
