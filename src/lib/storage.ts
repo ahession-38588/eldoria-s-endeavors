@@ -1,6 +1,6 @@
 import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory, CalendarFeed, CalendarEvent } from './types';
 
-const STORAGE_KEY = 'fantasy-todo-data';
+export const STORAGE_KEY = 'fantasy-todo-data';
 
 export interface ScheduleSettings {
   startTime: string; // HH:mm format
