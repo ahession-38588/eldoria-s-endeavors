@@ -1,7 +1,11 @@
 /* AppContext - global state */
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useState, ReactNode } from 'react';
 import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory, CalendarFeed, CalendarEvent, CalendarProvider } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+import { useAuth } from './auth';
 import { 
+  STORAGE_KEY,
   getStoredData, 
   saveData, 
   createTask, 
@@ -610,17 +614,42 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const { user } = useAuth();
+  const [cloudReady, setCloudReady] = useState(false);
+  const saveTimer = useRef<number | undefined>(undefined);
 
+  // Load: local cache first, then the account copy (or upload local data on first sign-in)
   useEffect(() => {
-    const data = getStoredData();
-    dispatch({ type: 'LOAD_DATA', payload: data });
-  }, []);
+    dispatch({ type: 'LOAD_DATA', payload: getStoredData() });
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.from('app_state').select('data').eq('user_id', user.id).maybeSingle();
+      if (cancelled) return;
+      if (error) { console.error('Cloud load failed', error); setCloudReady(true); return; }
+      if (data?.data && Object.keys(data.data as object).length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
+        dispatch({ type: 'LOAD_DATA', payload: getStoredData() });
+      } else {
+        await supabase.from('app_state').upsert({ user_id: user.id, data: getStoredData() as unknown as Json });
+      }
+      setCloudReady(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (state.lists.length > 0 || state.focusedTaskIds.length > 0 || state.companionStory) {
       saveData(state);
     }
-  }, [state]);
+    if (!user || !cloudReady) return;
+    window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      supabase.from('app_state')
+        .upsert({ user_id: user.id, data: state as unknown as Json, updated_at: new Date().toISOString() })
+        .then(({ error }) => { if (error) console.error('Cloud save failed', error); });
+    }, 1000);
+  }, [state, user, cloudReady]);
 
   const getTaskById = (taskId: string): { task: Task; listId: string } | null => {
     for (const list of state.lists) {
