@@ -2,12 +2,14 @@ import { FocusPane } from '@/components/FocusPane';
 import { BodyDoublingPane } from '@/components/BodyDoublingPane';
 import { ListsArea } from '@/components/ListsArea';
 
-import { Sparkles, BarChart3, Scroll } from 'lucide-react';
+import { Sparkles, BarChart3, Scroll, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdBanner from '@/components/AdBanner';
 import elfVillageBg from '@/assets/elf-village-bg.webp';
+import { useAuth } from '@/lib/auth';
 
 const Index = () => {
+  const { user, signOut } = useAuth();
   return (
     <div 
         className="min-h-screen w-full"
@@ -39,6 +41,14 @@ const Index = () => {
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden sm:inline">Stats</span>
               </Link>
+              <button
+                onClick={signOut}
+                title={user?.email ?? 'Sign out'}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
             </div>
           </div>
         </header>
