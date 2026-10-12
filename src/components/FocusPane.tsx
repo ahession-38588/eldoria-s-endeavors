@@ -260,7 +260,7 @@ export function FocusPane() {
       return;
     }
     
-    const today = new Date();
+    const today = new Date(selectedDate);
     today.setHours(hours, mins, 0, 0);
     
     dispatch({
