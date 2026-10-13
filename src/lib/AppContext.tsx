@@ -4,6 +4,7 @@ import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory, Ca
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from './auth';
+import { TrainingData, syncTrainingList } from './training';
 import { 
   STORAGE_KEY,
   getStoredData, 
@@ -20,6 +21,7 @@ interface AppState extends AppData {}
 
 type Action =
   | { type: 'LOAD_DATA'; payload: AppData }
+  | { type: 'SET_TRAINING'; payload: TrainingData }
   | { type: 'ADD_LIST'; payload: { name: string } }
   | { type: 'DELETE_LIST'; payload: { listId: string } }
   | { type: 'TOGGLE_LIST_COLLAPSE'; payload: { listId: string } }
@@ -597,6 +599,9 @@ function reducer(state: AppState, action: Action): AppState {
         ),
       };
     }
+
+    case 'SET_TRAINING':
+      return { ...state, training: action.payload, lists: syncTrainingList(state.lists, action.payload) };
 
     default:
       return state;

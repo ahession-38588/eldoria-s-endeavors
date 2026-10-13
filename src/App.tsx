@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "./lib/auth";
 import Index from "./pages/Index";
 import Stats from "./pages/Stats";
 import QuestBoard from "./pages/QuestBoard";
+import Training from "./pages/Training";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/Auth";
 import GoogleCalendarReturn from "./pages/GoogleCalendarReturn";
@@ -27,6 +28,7 @@ function Gate() {
           <Route path="/" element={<Index />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/quests" element={<QuestBoard />} />
+          <Route path="/training" element={<Training />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
