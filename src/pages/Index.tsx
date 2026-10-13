@@ -2,7 +2,7 @@ import { FocusPane } from '@/components/FocusPane';
 import { BodyDoublingPane } from '@/components/BodyDoublingPane';
 import { ListsArea } from '@/components/ListsArea';
 
-import { Sparkles, BarChart3, Scroll, LogOut } from 'lucide-react';
+import { Sparkles, BarChart3, Scroll, LogOut, Dumbbell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdBanner from '@/components/AdBanner';
 import elfVillageBg from '@/assets/elf-village-bg.webp';
@@ -33,6 +33,13 @@ const Index = () => {
               >
                 <Scroll className="w-4 h-4" />
                 <span className="hidden sm:inline">Quests</span>
+              </Link>
+              <Link
+                to="/training"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <Dumbbell className="w-4 h-4" />
+                <span className="hidden sm:inline">Training</span>
               </Link>
               <Link
                 to="/stats"
