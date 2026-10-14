@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from './auth';
 import { TrainingData, syncTrainingList } from './training';
+import { Loop, syncLoopsList, setLoopActionCompleted, parseLoopTaskId } from './loops';
 import { 
   STORAGE_KEY,
   getStoredData, 
@@ -22,6 +23,7 @@ interface AppState extends AppData {}
 type Action =
   | { type: 'LOAD_DATA'; payload: AppData }
   | { type: 'SET_TRAINING'; payload: TrainingData }
+  | { type: 'SET_LOOPS'; payload: Loop[] }
   | { type: 'ADD_LIST'; payload: { name: string } }
   | { type: 'DELETE_LIST'; payload: { listId: string } }
   | { type: 'TOGGLE_LIST_COLLAPSE'; payload: { listId: string } }
@@ -182,7 +184,10 @@ function reducer(state: AppState, action: Action): AppState {
       }
 
 
-      return { ...state, lists: updatedLists, companionStory: updatedStory };
+      const loops = parseLoopTaskId(action.payload.taskId)
+        ? setLoopActionCompleted(state.loops ?? [], action.payload.taskId, wasCompleting)
+        : state.loops;
+      return { ...state, lists: updatedLists, companionStory: updatedStory, loops };
     }
 
     case 'UPDATE_TASK_TEXT':
@@ -599,6 +604,9 @@ function reducer(state: AppState, action: Action): AppState {
         ),
       };
     }
+
+    case 'SET_LOOPS':
+      return { ...state, loops: action.payload, lists: syncLoopsList(state.lists, action.payload) };
 
     case 'SET_TRAINING':
       return { ...state, training: action.payload, lists: syncTrainingList(state.lists, action.payload) };

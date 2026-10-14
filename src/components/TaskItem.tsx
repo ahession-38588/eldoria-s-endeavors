@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Check, Target, Trash2, Edit2, GripVertical, Plus, ListPlus, X } from 'lucide-react';
+import { Check, Target, Trash2, Edit2, GripVertical, Plus, ListPlus, X, Repeat } from 'lucide-react';
 import { Task } from '@/lib/types';
 import { useApp } from '@/lib/AppContext';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNavigate } from 'react-router-dom';
 
 interface TaskItemProps {
   task: Task;
@@ -13,7 +14,10 @@ interface TaskItemProps {
 }
 
 export function TaskItem({ task, listId }: TaskItemProps) {
-  const { dispatch } = useApp();
+  const { dispatch, state } = useApp();
+  const navigate = useNavigate();
+  const linkedLoop = (state.loops ?? []).find(l => l.linkedTaskId === task.id);
+  const openLoop = () => navigate(`/loops?task=${encodeURIComponent(task.id)}&title=${encodeURIComponent(task.text)}`);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(task.text);
   const [justCompleted, setJustCompleted] = useState(false);
@@ -137,6 +141,11 @@ export function TaskItem({ task, listId }: TaskItemProps) {
             onClick={() => setIsEditing(true)}
           >
             {task.text}
+            {linkedLoop && (
+              <button onClick={openLoop} className="ml-2 inline-flex items-center gap-1 text-xs text-accent hover:underline" title="Open loop">
+                <Repeat className="w-3 h-3" />{linkedLoop.status === 'resolved' ? 'closed' : linkedLoop.status}
+              </button>
+            )}
             {hasSubtasks && (
               <span className="ml-2 text-xs text-muted-foreground/70">
                 {subDone}/{subtasks.length}
@@ -153,6 +162,13 @@ export function TaskItem({ task, listId }: TaskItemProps) {
             title="Add subtask"
           >
             <ListPlus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={openLoop}
+            className="p-1 rounded text-muted-foreground hover:text-accent hover:bg-accent/20 transition-all"
+            title={linkedLoop ? 'Open loop' : 'Open as loop'}
+          >
+            <Repeat className="w-3.5 h-3.5" />
           </button>
           {!task.completed && (
             <button

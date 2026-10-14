@@ -1,5 +1,6 @@
 import { Task, TodoList, CompanionStory, CompanionType, Quest, QuestCategory, CalendarFeed, CalendarEvent } from './types';
 import { TrainingData, emptyTraining } from './training';
+import type { Loop } from './loops';
 
 export const STORAGE_KEY = 'fantasy-todo-data';
 
@@ -19,6 +20,7 @@ export interface AppData {
   calendarFeeds: CalendarFeed[];
   calendarEvents: CalendarEvent[];
   training?: TrainingData;
+  loops?: Loop[];
 }
 
 export const generateId = (): string => {
@@ -63,6 +65,7 @@ export const getStoredData = (): AppData => {
         calendarFeeds: data.calendarFeeds || [],
         calendarEvents: data.calendarEvents || [],
         training: data.training || emptyTraining,
+        loops: data.loops || [],
       };
     }
   } catch (error) {
@@ -79,6 +82,7 @@ export const getStoredData = (): AppData => {
     calendarFeeds: [],
     calendarEvents: [],
     training: emptyTraining,
+    loops: [],
   };
 };
 
