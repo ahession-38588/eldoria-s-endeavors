@@ -3,10 +3,13 @@ import { Task, TodoList } from './types';
 export type LoopStatus = 'active' | 'waiting' | 'resolved';
 
 export interface LoopLogEntry { id: string; timestamp: number; note: string }
+export type LoopNodeKind = 'action' | 'waiting' | 'milestone';
 export interface LoopAction {
   id: string;
   text: string;
   completed: boolean;
+  /** action = something you can do; waiting = an external dependency; milestone = info/checkpoint */
+  kind?: LoopNodeKind;
   scheduledDate?: string; // yyyy-MM-dd
   scheduledTime?: string; // HH:mm
   duration?: number;
@@ -19,6 +22,9 @@ export interface LoopThread {
   waitingUntil?: string; // yyyy-MM-dd
   timeline: LoopLogEntry[];
   nextActions: LoopAction[];
+  /** Branch point: this thread forks off another thread's step */
+  parentThreadId?: string;
+  forkActionId?: string;
 }
 export interface Loop {
   id: string;
@@ -50,7 +56,7 @@ export function syncLoopsList(lists: TodoList[], loops: Loop[]): TodoList[] {
   for (const loop of loops) {
     for (const th of loop.threads) {
       for (const a of th.nextActions) {
-        if (!a.scheduledDate) continue;
+        if (!a.scheduledDate || (a.kind && a.kind !== 'action')) continue;
         const id = loopActionTaskId(loop.id, a.id);
         const prev = old.get(id);
         const [y, m, d] = a.scheduledDate.split('-').map(Number);
